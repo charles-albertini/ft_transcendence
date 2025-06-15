@@ -47,7 +47,10 @@ let assignedPlayerId: string|null = null;
 // 1) À la montée, on connecte la WS
 onMounted(() => {
   console.log('[JoinGame] onMounted : connexion WS…');
-  connectSocket('ws://localhost:3002');
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const host     = window.location.host;        // localhost:5000
+  connectSocket(`${protocol}://${host}/ws/`);
+
 
   setOnMessage((data: any) => {
     console.log('[JoinGame] WS onMessage →', data);

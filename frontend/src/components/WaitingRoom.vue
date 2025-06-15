@@ -63,7 +63,10 @@ onMounted(() => {
   }
 
   console.log('[WaitingRoom] onMounted : connexion WS et get-players');
-  connectSocket('ws://localhost:3002');
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const host     = window.location.host;        // localhost:5000
+  connectSocket(`${protocol}://${host}/ws/`);
+
 
   // On envoie un “get-players” pour récupérer la liste actuelle
   sendMessage('get-players', { gameId });

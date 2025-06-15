@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   frontend:
     container_name: frontend
@@ -14,29 +16,29 @@ services:
 
   backend:
     container_name: backend
-    # ports:
-    #   - "8000:8000"
     env_file:
       - .env
     build:
       context: ./backend
       dockerfile: Dockerfile
+    ports:
+      - "3002:3002"      # WebSocket
     networks:
       - ft_transcendance
     depends_on:
-        - db
+      - db
     restart: always
 
   db:
     container_name: DataBase
     build:
-        context: ./mariadb
-        dockerfile: Dockerfile
+      context: ./mariadb
+      dockerfile: Dockerfile
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MARIADB_DATABASE: ${MARIADB_DATABASE}
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_DATABASE:      ${MARIADB_DATABASE}
+      MARIADB_USER:          ${MARIADB_USER}
+      MARIADB_PASSWORD:      ${MARIADB_PASSWORD}
     networks:
       - ft_transcendance
     volumes:
@@ -51,7 +53,8 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "8080:80"          # HTTP → redirigé vers HTTPS
+      - "8443:443"        # HTTPS + WSS
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - ./volumes/logs:/var/log/nginx

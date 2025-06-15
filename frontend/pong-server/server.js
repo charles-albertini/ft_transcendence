@@ -57,9 +57,10 @@ function broadcastToOthers(gameId, senderWs, messageObj) {
   });
 }
 
-const wss = new WebSocketServer({ port: PORT }, () => {
-  console.log(`WebSocket server running on ws://localhost:${PORT}`);
-});
+const wss = new WebSocketServer({
+   port: 3002,
+   host: '0.0.0.0'        // bind sur toutes les interfaces
+ });
 
 wss.on('connection', (ws) => {
   ws.gameId = null;

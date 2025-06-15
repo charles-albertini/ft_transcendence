@@ -3,9 +3,16 @@
   <div class="create-container">
     <h1>{{ $t('createGameTitle') /* “Créer une partie en ligne” */ }}</h1>
 
+    <!-- Tant que la partie n'est pas créée, on affiche le formulaire -->
     <div v-if="!gameId">
-      <label for="playersCount">{{ $t('choosePlayersCount') /* “Nombre de joueurs” */ }}</label>
-      <select v-model="playersCount" id="playersCount" class="select-count">
+      <label for="playersCount">
+        {{ $t('choosePlayersCount') /* “Nombre de joueurs” */ }}
+      </label>
+      <select
+        id="playersCount"
+        v-model="playersCount"
+        class="select-count"
+      >
         <option :value="2">2 {{ $t('players') }}</option>
         <option :value="4">4 {{ $t('players') }}</option>
       </select>
@@ -15,8 +22,12 @@
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     </div>
 
+    <!-- Une fois la partie créée, on propose d'entrer dans le salon -->
     <div v-else class="created-info">
-      <p>{{ $t('gameCreatedId') /* “Partie créée ! ID :” */ }} <strong>{{ gameId }}</strong></p>
+      <p>
+        {{ $t('gameCreatedId') /* “Partie créée ! ID :” */ }}
+        <strong>{{ gameId }}</strong>
+      </p>
       <button @click="goWaiting" class="btn btn-waiting">
         {{ $t('goToWaiting') /* “Aller au salon” */ }}
       </button>
@@ -25,59 +36,102 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { connectSocket, sendMessage, setOnMessage } from '../services/websocket';
-//import { useI18n } from 'vue-i18n';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
-const router = useRouter();
-//const { t } = useI18n();
+const { t } = useI18n()
+const router = useRouter()
 
-const playersCount = ref<number>(2);
-const gameId = ref<string | null>(null);
-const errorMessage = ref<string | null>(null);
+const playersCount = ref<number>(2)
+const gameId       = ref<string | null>(null)
+const errorMessage = ref<string | null>(null)
 
-// 1) À la montée, on ouvre la WS (si pas déjà ouverte)
-onMounted(() => {
-  console.log('[CreateGame] onMounted : connexion WS…');
-  connectSocket('ws://localhost:3002');
+// Référence au WebSocket en cours
+let socket: WebSocket | null = null
 
-  setOnMessage((data: any) => {
-    console.log('[CreateGame] WS onMessage →', data);
-    switch (data.type) {
-      case 'game-created': {
-        // { payload: { gameId, assignedPlayerId: 'player1' } }
-        const { gameId: newId } = data.payload;
-        gameId.value = newId;
-        break;
-      }
-      case 'error': {
-        errorMessage.value = data.payload.message || 'Erreur inconnue.';
-        break;
-      }
-      default:
-        break;
-    }
-  });
-});
-
-// 2) Fonction de création : envoie { type: 'create-game', payload: { maxPlayers: playersCount } }
-function create() {
-  console.log('[CreateGame] create() → playersCount =', playersCount.value);
-  errorMessage.value = null;
-  sendMessage('create-game', { maxPlayers: playersCount.value });
+/**
+ * Construit l’URL WS/WSS en fonction du protocole et du port actuel
+ * (ex. wss://localhost:8443/ws/ ou ws://localhost:8080/ws/)
+ */
+function getWsUrl(): string {
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+  const host     = window.location.host      // "localhost:8443" ou "192.168.1.6:8443"
+  return `${protocol}://${host}/ws/`
 }
 
-// 3) Une fois la partie créée (gameId non-null), on peut aller dans la waiting-room
+/**
+ * Gère les messages entrants pour récupérer l'ID de partie ou l'erreur
+ */
+function handleMessage(evt: MessageEvent) {
+  const msg = JSON.parse(evt.data)
+  if (msg.type === 'game-created') {
+    gameId.value = msg.payload.gameId
+  }
+  else if (msg.type === 'error') {
+    errorMessage.value = msg.payload.message || t('unknownError')
+  }
+}
+
+/**
+ * Au clic sur “Créer”, on ouvre le WS si besoin et on envoie create-game
+ */
+function create() {
+  errorMessage.value = null
+
+  // Si pas encore de socket, ou fermée, on en crée une nouvelle
+  if (!socket || socket.readyState === WebSocket.CLOSED) {
+    socket = new WebSocket(getWsUrl())
+
+    // Dès que la connexion est établie, on envoie notre demande
+    socket.addEventListener('open', () => {
+      console.log('[CreateGame] WS ouvert, envoi create-game')
+      const payload = {
+        type: 'create-game',
+        payload: { maxPlayers: playersCount.value }
+      }
+      socket!.send(JSON.stringify(payload))
+    })
+
+    socket.addEventListener('message', handleMessage)
+    socket.addEventListener('error', (err) => {
+      console.error('[CreateGame] Erreur WS', err)
+      errorMessage.value = t('wsConnectionError')
+    })
+  }
+  // Si déjà ouvert, on peut renvoyer immédiatement
+  else if (socket.readyState === WebSocket.OPEN) {
+    console.log('[CreateGame] WS déjà ouvert, envoi create-game direct')
+    const payload = {
+      type: 'create-game',
+      payload: { maxPlayers: playersCount.value }
+    }
+    socket.send(JSON.stringify(payload))
+  }
+  // Si en cours de connexion, on réessaye à l'ouverture
+  else {
+    socket.addEventListener('open', () => {
+      const payload = {
+        type: 'create-game',
+        payload: { maxPlayers: playersCount.value }
+      }
+      socket!.send(JSON.stringify(payload))
+    }, { once: true })
+  }
+}
+
+/**
+ * Une fois gameId connu, on redirige vers la salle d'attente
+ */
 function goWaiting() {
-  if (!gameId.value) return;
+  if (!gameId.value) return
   router.push({
     name: 'WaitingRoom',
     query: {
-      id: gameId.value,
-      playerId: 'player1' // l’hôte est toujours player1
+      id:       gameId.value,
+      playerId: 'player1'  // l’hôte
     }
-  });
+  })
 }
 </script>
 
@@ -107,8 +161,8 @@ h1 {
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  color: white;
   transition: background-color 0.2s;
+  color: white;
 }
 .btn-create {
   background-color: #4caf50;

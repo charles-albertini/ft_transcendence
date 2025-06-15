@@ -410,7 +410,10 @@ function goHome() {
 
 onMounted(() => {
   console.log('[GamemultiOnline] onMounted : connexion WS…');
-  connectSocket('ws://localhost:3002');
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const host     = window.location.host;        // localhost:5000
+  connectSocket(`${protocol}://${host}/ws/`);
+
 
   setOnMessage((data: any) => {
     console.warn('[GamemultiOnline] WS message →', data);
@@ -426,7 +429,7 @@ onMounted(() => {
         break;
       }
       case 'player-joined': {
-        const { gameState: stateFromServer } = data.payload;
+        const { maxPlayers: mp, gameState: stateFromServer } = data.payload;
         if (stateFromServer.gameStarted) {
           Object.assign(gameState, stateFromServer);
           gameState.gameStarted = true;
