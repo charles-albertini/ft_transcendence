@@ -10,7 +10,7 @@
       </label>
       <select
         id="playersCount"
-        v-model="playersCount"
+        v-model.number="playersCount"
         class="select-count"
       >
         <option :value="2">2 {{ $t('players') }}</option>

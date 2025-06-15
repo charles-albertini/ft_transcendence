@@ -4,10 +4,10 @@ import { randomUUID } from 'crypto';
 
 const PORT = 3002;
 
-// Structure mémoire des parties
+// In-memory store of all games
 const games = {};
 
-// Fonction utilitaire pour initialiser gameState
+// Utility: initial state for a new game
 function createInitialGameState(maxPlayers) {
   return {
     ballX: 400,
@@ -33,7 +33,7 @@ function createInitialGameState(maxPlayers) {
   };
 }
 
-// Envoie un objet JSON à tous les WebSocket connectés dans la partie
+// Send a JSON message to all sockets in a game
 function broadcastToGame(gameId, messageObj) {
   const room = games[gameId];
   if (!room) return;
@@ -45,7 +45,7 @@ function broadcastToGame(gameId, messageObj) {
   });
 }
 
-// Envoie un message à tous SAUF à l'expéditeur
+// Send to everyone except the sender
 function broadcastToOthers(gameId, senderWs, messageObj) {
   const room = games[gameId];
   if (!room) return;
@@ -57,10 +57,11 @@ function broadcastToOthers(gameId, senderWs, messageObj) {
   });
 }
 
+// Start WebSocket server
 const wss = new WebSocketServer({
-   port: 3002,
-   host: '0.0.0.0'        // bind sur toutes les interfaces
- });
+  port: PORT,
+  host: '0.0.0.0'
+});
 
 wss.on('connection', (ws) => {
   ws.gameId = null;
@@ -70,47 +71,42 @@ wss.on('connection', (ws) => {
     let data;
     try {
       data = JSON.parse(raw.toString());
-    } catch (err) {
-      console.error('Invalid JSON reçu :', raw.toString());
+    } catch {
       return;
     }
-
     const { type, payload } = data;
-    console.log('Server received:', type, payload);
 
     switch (type) {
       case 'create-game': {
-        const { maxPlayers } = payload;
+        const maxPlayers = Number(payload.maxPlayers);
         const gameId = randomUUID();
         const initialState = createInitialGameState(maxPlayers);
 
+        // Create room
         games[gameId] = {
           players: [{ id: 'player1', ws }],
           maxPlayers,
           gameState: initialState,
-          readyPlayers: []
+          readyPlayers: []         // starts empty
         };
 
         ws.playerId = 'player1';
-        ws.gameId = gameId;
+        ws.gameId   = gameId;
 
-        ws.send(
-          JSON.stringify({
-            type: 'game-created',
-            payload: {
-              gameId,
-              assignedPlayerId: 'player1'
-            }
-          })
-        );
+        // Reply with game ID
+        ws.send(JSON.stringify({
+          type: 'game-created',
+          payload: { gameId, assignedPlayerId: 'player1' }
+        }));
 
+        // Notify any watchers (though only one player so far)
         broadcastToGame(gameId, {
           type: 'player-joined',
           payload: {
-            players: games[gameId].players.map((p) => p.id),
-            playersCount: games[gameId].players.length,
-            maxPlayers: games[gameId].maxPlayers,
-            gameState: games[gameId].gameState
+            players: games[gameId].players.map(p => p.id),
+            playersCount: 1,
+            maxPlayers,
+            gameState: initialState
           }
         });
         break;
@@ -123,46 +119,47 @@ wss.on('connection', (ws) => {
           ws.send(JSON.stringify({ type: 'game-not-found' }));
           return;
         }
-        if (room.players.length >= room.maxPlayers) {
+        if (room.readyPlayers.length === Number(room.maxPlayers)) {
           ws.send(JSON.stringify({ type: 'game-full' }));
           return;
         }
 
-        const taken = room.players.map((p) => p.id);
+        // Assign next available player ID
+        const taken = room.players.map(p => p.id);
         let assigned = null;
         for (let i = 1; i <= room.maxPlayers; i++) {
-          const testId = `player${i}`;
-          if (!taken.includes(testId)) {
-            assigned = testId;
+          const pid = `player${i}`;
+          if (!taken.includes(pid)) {
+            assigned = pid;
             break;
           }
         }
         if (!assigned) {
-          ws.send(JSON.stringify({ type: 'error', payload: { message: "Impossible d'assigner un ID" } }));
+          ws.send(JSON.stringify({ type: 'error', payload: { message: "Impossible d’assigner un ID" } }));
           return;
         }
 
         room.players.push({ id: assigned, ws });
         ws.playerId = assigned;
-        ws.gameId = joinId;
+        ws.gameId   = joinId;
 
-        ws.send(
-          JSON.stringify({
-            type: 'join-success',
-            payload: {
-              assignedPlayerId: assigned,
-              players: room.players.map((p) => p.id),
-              playersCount: room.players.length,
-              maxPlayers: room.maxPlayers,
-              gameState: room.gameState
-            }
-          })
-        );
+        // Confirm join
+        ws.send(JSON.stringify({
+          type: 'join-success',
+          payload: {
+            assignedPlayerId: assigned,
+            players: room.players.map(p => p.id),
+            playersCount: room.players.length,
+            maxPlayers: room.maxPlayers,
+            gameState: room.gameState
+          }
+        }));
 
+        // Notify everyone
         broadcastToGame(joinId, {
           type: 'player-joined',
           payload: {
-            players: room.players.map((p) => p.id),
+            players: room.players.map(p => p.id),
             playersCount: room.players.length,
             maxPlayers: room.maxPlayers,
             gameState: room.gameState
@@ -175,17 +172,15 @@ wss.on('connection', (ws) => {
         const { gameId: gpId } = payload;
         const room = games[gpId];
         if (!room) return;
-        ws.send(
-          JSON.stringify({
-            type: 'player-joined',
-            payload: {
-              players: room.players.map((p) => p.id),
-              playersCount: room.players.length,
-              maxPlayers: room.maxPlayers,
-              gameState: room.gameState
-            }
-          })
-        );
+        ws.send(JSON.stringify({
+          type: 'player-joined',
+          payload: {
+            players: room.players.map(p => p.id),
+            playersCount: room.players.length,
+            maxPlayers: room.maxPlayers,
+            gameState: room.gameState
+          }
+        }));
         break;
       }
 
@@ -194,19 +189,25 @@ wss.on('connection', (ws) => {
         const room = games[prId];
         if (!room) return;
 
+        // Mark this player as ready
         if (!room.readyPlayers.includes(pid)) {
           room.readyPlayers.push(pid);
         }
 
-        console.log(`Room ${prId} → joueurs prêts : `, room.readyPlayers);
+        console.log(`Room ${prId} readyPlayers:`, room.readyPlayers);
 
+        // 1) Broadcast the updated list of ready players
+        broadcastToGame(prId, {
+          type: 'players-ready',
+          payload: { readyPlayers: room.readyPlayers }
+        });
+
+        // 2) If everyone is ready, start the game
         if (room.readyPlayers.length === room.maxPlayers) {
           room.gameState.gameStarted = true;
           broadcastToGame(prId, {
             type: 'all-ready',
-            payload: {
-              gameState: room.gameState
-            }
+            payload: { gameState: room.gameState }
           });
         }
         break;
@@ -217,16 +218,13 @@ wss.on('connection', (ws) => {
         const room = games[gmId];
         if (!room || !room.gameState.gameStarted) return;
 
-        // IMPORTANT: Mettre à jour l'état du serveur
+        // Update server state
         room.gameState.paddles[movePid] = moveData.paddlePosition;
 
-        // Envoyer SEULEMENT aux autres joueurs (pas à celui qui a envoyé le mouvement)
+        // Inform the other players
         broadcastToOthers(gmId, ws, {
           type: 'opponent-move',
-          payload: {
-            playerId: movePid,
-            moveData
-          }
+          payload: { playerId: movePid, moveData }
         });
         break;
       }
@@ -236,56 +234,47 @@ wss.on('connection', (ws) => {
         const room = games[upId];
         if (!room) return;
 
-        // Fusionner les états plutôt que de remplacer complètement
-        // Cela évite d'écraser les positions des paddles mises à jour par player-move
+        // Merge states so we don't overwrite other paddles
         room.gameState = {
           ...room.gameState,
           ...newState,
-          // Garder les positions des paddles si elles ne sont pas dans la mise à jour
           paddles: {
             ...room.gameState.paddles,
             ...(newState.paddles || {})
           }
         };
 
-        // Envoyer SEULEMENT aux autres joueurs (pas à l'host qui a envoyé la mise à jour)
         broadcastToOthers(upId, ws, {
           type: 'game-update',
-          payload: {
-            gameState: room.gameState
-          }
+          payload: { gameState: room.gameState }
         });
         break;
       }
 
       default:
-        console.warn('Type non géré par serveur :', type);
-        break;
+        console.warn('Unhandled type:', type);
     }
   });
 
   ws.on('close', () => {
-    const gId = ws.gameId;
-    const pId = ws.playerId;
+    const gId = ws.gameId, pId = ws.playerId;
     if (!gId || !games[gId]) return;
-
     const room = games[gId];
-    room.players = room.players.filter((p) => p.id !== pId);
-    room.readyPlayers = room.readyPlayers.filter((r) => r !== pId);
+    room.players = room.players.filter(p => p.id !== pId);
+    room.readyPlayers = room.readyPlayers.filter(r => r !== pId);
 
     if (room.players.length === 0) {
       delete games[gId];
-      return;
+    } else {
+      broadcastToGame(gId, {
+        type: 'player-joined',
+        payload: {
+          players: room.players.map(p => p.id),
+          playersCount: room.players.length,
+          maxPlayers: room.maxPlayers,
+          gameState: room.gameState
+        }
+      });
     }
-
-    broadcastToGame(gId, {
-      type: 'player-joined',
-      payload: {
-        players: room.players.map((p) => p.id),
-        playersCount: room.players.length,
-        maxPlayers: room.maxPlayers,
-        gameState: room.gameState
-      }
-    });
   });
 });
