@@ -14,7 +14,7 @@ services:
       dockerfile: Dockerfile
     # plus de mapping 3002:3002 ici
     ports:
-      - "8000:8000"       # votre API REST si besoin
+      - "8002:8002"       # votre API REST si besoin
     networks:
       - ft_transcendance
     restart: always
@@ -24,7 +24,7 @@ services:
       context: ./frontend/pong-server
       dockerfile: Dockerfile
     ports:
-      - "3002:3002"       # unique mapping pour le WS
+      - "3003:3003"       # unique mapping pour le WS
     networks:
       - ft_transcendance
     restart: always
@@ -34,8 +34,8 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "8080:80"         # HTTP → redirect HTTPS
-      - "8443:443"        # HTTPS + WSS
+      - "8081:80"         # HTTP → redirect HTTPS
+      - "8444:443"        # HTTPS + WSS
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     networks:

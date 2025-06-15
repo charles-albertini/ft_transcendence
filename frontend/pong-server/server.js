@@ -1,7 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { randomUUID } from 'crypto';
 
-const PORT = 3002;
+const PORT = 3003;
 const games = {};
 
 /** État initial d’une partie */
