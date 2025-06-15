@@ -1,11 +1,9 @@
-// src/services/websocket.ts
-
 let socket: WebSocket;
 let onMessageCallback: ((data: any) => void) | null = null;
 
 /**
- * Ouvre une connexion WebSocket et retourne le WebSocket pour
- * pouvoir ajouter des listeners (open, message, etc.).
+ * Ouvre une nouvelle connexion WebSocket (pour CreateGame/JoinGame)
+ * et retourne le WebSocket pour pouvoir y greffer des listeners.
  */
 export function connectSocket(url: string): WebSocket {
   socket = new WebSocket(url);
@@ -14,7 +12,7 @@ export function connectSocket(url: string): WebSocket {
   });
   socket.addEventListener('message', (evt: MessageEvent) => {
     const data = JSON.parse(evt.data);
-    if (onMessageCallback) onMessageCallback(data);
+    onMessageCallback?.(data);
   });
   socket.addEventListener('close', () => {
     console.log('[WS] déconnecté');
@@ -26,7 +24,8 @@ export function connectSocket(url: string): WebSocket {
 }
 
 /**
- * Retourne le socket existant s'il est ouvert, sinon en crée un nouveau.
+ * Si une socket est déjà ouverte, on la réutilise ;
+ * sinon on en crée une nouvelle.
  */
 export function getSocket(url: string): WebSocket {
   if (socket && socket.readyState === WebSocket.OPEN) {
@@ -36,7 +35,7 @@ export function getSocket(url: string): WebSocket {
 }
 
 /**
- * Définit la fonction à appeler à chaque message reçu.
+ * Définit le callback invoqué à chaque message reçu.
  */
 export function setOnMessage(cb: (data: any) => void) {
   onMessageCallback = cb;
