@@ -119,7 +119,7 @@ const router = createRouter({
 // Navigation guard
 router.beforeEach((to, _from, next) => {
   // Liste des routes protégées qui nécessitent une authentification
-  const protectedRoutes = ['/profile', '/Game', '/Gamemulti', '/tournamentgame', '/tournamentbracket', '/tournamentplayer'];
+  const protectedRoutes = ['/profile'];
   
   // Si la route est protégée et que l'utilisateur n'est pas authentifié
   if (protectedRoutes.includes(to.path) && !isAuthenticated()) {
