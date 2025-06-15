@@ -1,0 +1,70 @@
+services:
+  frontend:
+    container_name: frontend
+    env_file:
+      - .env
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - ft_transcendance
+    depends_on:
+      - db
+    restart: always
+
+  backend:
+    container_name: backend
+    # ports:
+    #   - "8000:8000"
+    env_file:
+      - .env
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    networks:
+      - ft_transcendance
+    depends_on:
+        - db
+    restart: always
+
+  db:
+    container_name: DataBase
+    build:
+        context: ./mariadb
+        dockerfile: Dockerfile
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    networks:
+      - ft_transcendance
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+
+  web:
+    container_name: nginx
+    env_file:
+      - .env
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./volumes/logs:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - ft_transcendance
+    restart: always
+
+volumes:
+  db_data:
+
+networks:
+  ft_transcendance:
+    driver: bridge
