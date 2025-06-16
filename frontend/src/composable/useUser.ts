@@ -1,5 +1,3 @@
-"use client"
-
 import { ref, computed } from "vue"
 import { userApi } from "../services/userAPI"
 

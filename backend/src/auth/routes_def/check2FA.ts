@@ -3,6 +3,10 @@ import speakeasy from 'speakeasy';
 import { User } from '../../db_models/user_model';
 import { JWTpayload } from '../../interfaces';
 
+interface Check2FARequest {
+	code: string;
+}
+
 export async function check2FA(request: FastifyRequest, reply: FastifyReply) {
 	const payload = request.user as JWTpayload;
 	const id = payload.user_id;
@@ -12,7 +16,7 @@ export async function check2FA(request: FastifyRequest, reply: FastifyReply) {
 		return reply.code(404).send({ error: 'User not found' });
 	}
 
-	const code2FA = request.body as string;
+	const { code: code2FA } = request.body as Check2FARequest;
 	if (!code2FA) {
 		return reply.code(400).send({ error: 'Code is required' });
 	}

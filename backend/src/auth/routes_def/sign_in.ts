@@ -45,12 +45,8 @@ export async function sign_in(request: FastifyRequest, reply:FastifyReply) {
 				losses: user.number_of_lose
 			}
 		}
-
-		return reply.code(200).send({ 
-			token: token, 
-			refreshToken,
-			user: userData
-		})
+		
+		return reply.code(200).send({ token: token, refreshToken, user: userData })
 	}
 	catch (error) 
 	{

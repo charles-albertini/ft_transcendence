@@ -2,66 +2,77 @@
   <div class="tournament-container">
     <!-- Header -->
     <div class="tournament-header">
-      <h1 class="tournament-title">TOURNOI PONG</h1>
-      <p class="tournament-subtitle">Configuration des Joueurs - Bracket 8 Joueurs</p>
+      <button @click="goHome" class="back-home-button">
+        <svg class="back-icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+        </svg>
+        Retour à l'accueil
+      </button>
+      <div class="header-content">
+        <h1 class="tournament-title">TOURNOI PONG</h1>
+        <p class="tournament-subtitle">Configuration des Joueurs - Bracket 8 Joueurs</p>
+      </div>
     </div>
 
-    <!-- Setup Section -->
-    <div class="setup-section">
-      <h2 class="setup-title">Configuration des Joueurs</h2>
-      <div class="players-grid">
-        <div v-for="(_, index) in playerNames" :key="index" class="player-input-group">
-          <label :for="'player' + index">Joueur {{ index + 1 }}:</label>
-          <input 
-            :id="'player' + index"
-            v-model="playerNames[index]"
-            type="text" 
-            class="player-input" 
-            :placeholder="'Nom du joueur ' + (index + 1)"
-            @keyup.enter="startTournament"
+    <!-- Main Content Layout -->
+    <div class="main-content">
+      <!-- Setup Section (Left) -->
+      <div class="setup-section">
+        <h2 class="setup-title">Configuration des Joueurs</h2>
+        <div class="players-grid">
+          <div v-for="(_, index) in playerNames" :key="index" class="player-input-group">
+            <label :for="'player' + index">Joueur {{ index + 1 }}:</label>
+            <input 
+              :id="'player' + index"
+              v-model="playerNames[index]"
+              type="text" 
+              class="player-input" 
+              :placeholder="'Nom du joueur ' + (index + 1)"
+              @keyup.enter="startTournament"
+            >
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button 
+            @click="fillDefaultNames" 
+            class="default-names-btn"
           >
+            🎲 Noms par défaut
+          </button>
+          <button 
+            @click="clearNames" 
+            class="clear-names-btn"
+          >
+            🗑️ Effacer tout
+          </button>
+          <button 
+            @click="startTournament" 
+            :disabled="!canStartTournament" 
+            class="start-tournament-btn"
+          >
+            🏆 Commencer le Tournoi
+          </button>
         </div>
       </div>
-      
-      <div class="button-group">
-        <button 
-          @click="fillDefaultNames" 
-          class="default-names-btn"
-        >
-          🎲 Noms par défaut
-        </button>
-        <button 
-          @click="clearNames" 
-          class="clear-names-btn"
-        >
-          🗑️ Effacer tout
-        </button>
-        <button 
-          @click="startTournament" 
-          :disabled="!canStartTournament" 
-          class="start-tournament-btn"
-        >
-          🏆 Commencer le Tournoi
-        </button>
-      </div>
-    </div>
 
-    <!-- Instructions -->
-    <div class="instructions">
-      <p>🎮 <strong>Instructions :</strong> Entrez les noms des 8 joueurs pour commencer le tournoi</p>
-      <p>✅ <strong>Validation :</strong> Tous les noms doivent être uniques et non vides</p>
-      <p>⚡ <strong>Astuce :</strong> Appuyez sur Entrée dans un champ pour valider rapidement</p>
-    </div>
+      <!-- Right Side Panel -->
+      <div class="right-panel">
+        <!-- Instructions -->
+        <div class="instructions">
+          <p>🎮 <strong>Instructions :</strong> Entrez les noms des 8 joueurs pour commencer le tournoi</p>
+          <p>⚡ <strong>Astuce :</strong> Appuyez sur Entrée dans un champ pour valider rapidement</p>
+        </div>
 
-    <!-- Validation Status -->
-    <div class="validation-status">
-      <div class="validation-item" :class="{ 'valid': filledNamesCount === 8 }">
-        <span class="validation-icon">{{ filledNamesCount === 8 ? '✅' : '❌' }}</span>
-        <span>Noms remplis : {{ filledNamesCount }}/8</span>
-      </div>
-      <div class="validation-item" :class="{ 'valid': hasUniqueNames }">
-        <span class="validation-icon">{{ hasUniqueNames ? '✅' : '❌' }}</span>
-        <span>Noms uniques : {{ hasUniqueNames ? 'Oui' : 'Non' }}</span>
+        <!-- Validation Status -->
+        <div class="validation-status">
+          <div class="validation-item" :class="{ 'valid': filledNamesCount === 8 }">
+            <span>Noms remplis : {{ filledNamesCount }}/8</span>
+          </div>
+          <div class="validation-item" :class="{ 'valid': hasUniqueNames }">
+            <span>Noms uniques : {{ hasUniqueNames ? 'Oui' : 'Non' }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -106,6 +117,10 @@ const clearNames = () => {
   playerNames.value = Array(8).fill('')
 }
 
+const goHome = () => {
+  router.push('/')
+}
+
 const startTournament = () => {
   if (!canStartTournament.value) {
     if (filledNamesCount.value !== 8) {
@@ -116,12 +131,19 @@ const startTournament = () => {
     return
   }
   
+  // Nettoyer l'état précédent du localStorage
+  localStorage.removeItem('tournament_state')
+  localStorage.removeItem('tournamentMatchResult')
+  
   // Naviguer vers la page bracket avec les noms des joueurs
   const cleanNames = playerNames.value.map(name => name.trim())
-  router.push({
-    name: 'tournamentbracket',
+  
+  // Utiliser replace et forcer le rechargement du composant
+  router.replace({
+    path: '/tournamentbracket',
     query: {
-      players: cleanNames.join(',')
+      players: cleanNames.join(','),
+      timestamp: Date.now().toString() // Force refresh
     }
   })
 }
@@ -129,20 +151,71 @@ const startTournament = () => {
 
 <style scoped>
 .tournament-container {
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #1a472a 100%);
-  padding: 2rem;
+  padding: 1rem;
   font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .tournament-header {
-  text-align: center;
-  margin-bottom: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
   padding: 2rem;
   border: 3px solid #d4af37;
   border-radius: 1rem;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.back-home-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 2px solid #d4af37;
+  border-radius: 0.5rem;
+  color: #d4af37;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  position: absolute;
+  left: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.back-home-button:hover {
+  background: rgba(212, 175, 55, 0.2);
+  transform: translateY(-50%) translateY(-2px);
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.back-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.header-content {
+  text-align: center;
+  flex: 1;
+}
+
+.main-content {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex: 1;
+  overflow: hidden;
 }
 
 .tournament-title {
@@ -165,10 +238,20 @@ const startTournament = () => {
   border: 2px solid #d4af37;
   border-radius: 1rem;
   padding: 2rem;
-  margin-bottom: 2rem;
   backdrop-filter: blur(10px);
   max-width: 800px;
-  margin: 0 auto 2rem auto;
+  flex: 0 0 700px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.right-panel {
+  flex: 0 0 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
 }
 
 .setup-title {
@@ -177,6 +260,7 @@ const startTournament = () => {
   font-weight: bold;
   margin-bottom: 1.5rem;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .players-grid {
@@ -184,6 +268,7 @@ const startTournament = () => {
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
+  flex: 1;
 }
 
 .player-input-group {
@@ -218,6 +303,7 @@ const startTournament = () => {
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .default-names-btn, .clear-names-btn {
@@ -270,9 +356,8 @@ const startTournament = () => {
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 1rem;
   padding: 1.5rem;
-  margin: 2rem auto;
-  max-width: 400px;
   backdrop-filter: blur(10px);
+  flex-shrink: 0;
 }
 
 .validation-item {
@@ -298,13 +383,12 @@ const startTournament = () => {
 
 .instructions {
   text-align: center;
-  margin: 2rem auto;
   padding: 1.5rem;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 1rem;
   border: 1px solid rgba(212, 175, 55, 0.3);
   backdrop-filter: blur(10px);
-  max-width: 600px;
+  flex-shrink: 0;
 }
 
 .instructions p {
@@ -323,6 +407,32 @@ const startTournament = () => {
     font-size: 2rem;
   }
   
+  .tournament-header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .back-home-button {
+    position: static;
+    transform: none;
+    align-self: flex-start;
+  }
+  
+  .back-home-button:hover {
+    transform: translateY(-2px);
+  }
+  
+  .main-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .right-panel {
+    flex: none;
+  }
+  
   .players-grid {
     grid-template-columns: 1fr;
   }
@@ -335,6 +445,18 @@ const startTournament = () => {
   .default-names-btn, .clear-names-btn, .start-tournament-btn {
     width: 100%;
     max-width: 300px;
+  }
+  
+  .setup-section {
+    padding: 1rem;
+  }
+  
+  .instructions {
+    padding: 1rem;
+  }
+  
+  .validation-status {
+    padding: 1rem;
   }
 }
 </style>

@@ -85,10 +85,10 @@
           </p>
           <div class="controls-preview">
             <div class="control-item">
-              <strong>{{ player1Name }}:</strong> W/S ou ↑/↓
+              <strong>{{ player1Name }}:</strong> W/S
             </div>
             <div class="control-item">
-              <strong>{{ player2Name }}:</strong> I/K ou Numpad 8/2
+              <strong>{{ player2Name }}:</strong> Flèches ↑/↓
             </div>
           </div>
         </div>
@@ -123,7 +123,6 @@
               🔄 Rejouer
             </button>
             <button @click="confirmWinner" class="btn btn-primary btn-large">
-              ✅ Confirmer et Continuer
             </button>
           </div>
         </div>
@@ -143,10 +142,10 @@
       <div class="footer-container">
         <div class="controls-info">
           <div class="player-controls">
-            <strong>{{ player1Name }} (Gauche):</strong> Touches W/S ou ↑/↓
+            <strong>{{ player1Name }} (Gauche):</strong> Touches W/S
           </div>
           <div class="player-controls">
-            <strong>{{ player2Name }} (Droite):</strong> Touches I/K ou Numpad 8/2
+            <strong>{{ player2Name }} (Droite):</strong> Flèches ↑/↓
           </div>
         </div>
         <div class="game-info">
@@ -162,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 // Props depuis la route
@@ -172,6 +171,8 @@ const router = useRouter()
 // Noms des joueurs depuis les paramètres de la route
 const player1Name = ref(route.query.player1 as string || 'Joueur 1')
 const player2Name = ref(route.query.player2 as string || 'Joueur 2')
+
+// Debug logging
 
 // Game state
 const gameCanvas = ref<HTMLCanvasElement | null>(null)
@@ -186,16 +187,12 @@ const winningScore = 5
 
 // Keyboard state for smooth movement
 const keys = ref({
-  // Joueur 1 (gauche)
-  ArrowUp: false,
-  ArrowDown: false,
+  // Joueur 1 (gauche) - W/S
   KeyW: false,
   KeyS: false,
-  // Joueur 2 (droite)
-  KeyI: false,
-  KeyK: false,
-  Numpad8: false,
-  Numpad2: false
+  // Joueur 2 (droite) - Flèches haut/bas
+  ArrowUp: false,
+  ArrowDown: false
 })
 
 // Game elements
@@ -231,16 +228,43 @@ let animationFrameId: number | null = null
 
 // Initialize game
 onMounted(() => {
-  if (gameCanvas.value) {
-    ctx.value = gameCanvas.value.getContext('2d')
-    resetBall()
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
-    window.addEventListener('resize', handleResize)
-    handleResize()
-    startGameLoop()
-  }
+  // Attendre que le DOM soit complètement rendu avec un délai supplémentaire
+  nextTick(() => {
+    setTimeout(() => {
+      initializeCanvas()
+    }, 150) // Délai de 150ms pour s'assurer que le DOM est prêt
+  })
 })
+
+function initializeCanvas() {
+  
+  if (gameCanvas.value) {
+    
+    ctx.value = gameCanvas.value.getContext('2d')
+    if (ctx.value) {
+      resetBall()
+      
+      // Forcer un premier rendu pour s'assurer que quelque chose s'affiche
+      setTimeout(() => {
+        drawGame()
+      }, 50)
+      
+      window.addEventListener('keydown', handleKeyDown)
+      window.addEventListener('keyup', handleKeyUp)
+      window.addEventListener('resize', handleResize)
+      handleResize()
+      startGameLoop()
+    } else {
+      console.error('Failed to get canvas context, retrying...')
+      // Retry après un délai si l'initialisation échoue
+      setTimeout(initializeCanvas, 300)
+    }
+  } else {
+    console.error('Canvas element not found, retrying...')
+    // Retry après un délai si l'élément n'est pas trouvé
+    setTimeout(initializeCanvas, 300)
+  }
+}
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
@@ -282,7 +306,6 @@ function updateGame() {
     } else {
       ball.value.y = gameCanvas.value!.height - ball.value.radius
     }
-    playSound('wall')
   }
 
   // Paddle collision detection
@@ -312,17 +335,14 @@ function updateGame() {
       ball.value.x = paddle.x - ball.value.radius - 1
     }
     
-    playSound('paddle')
   }
 
   // Ball out of bounds (scoring)
   if (ball.value.x - ball.value.radius < 0) {
     player2Score.value++
-    playSound('score')
     resetBall()
   } else if (ball.value.x + ball.value.radius > gameCanvas.value!.width) {
     player1Score.value++
-    playSound('score')
     resetBall()
   }
 }
@@ -352,77 +372,84 @@ function checkImprovedPaddleCollision(paddle: typeof player1.value) {
 }
 
 function drawGame() {
-  if (!ctx.value || !gameCanvas.value) return
+  if (!ctx.value || !gameCanvas.value) {
+    console.warn('Canvas context or canvas element not available')
+    return
+  }
 
-  // Clear canvas
-  ctx.value.clearRect(0, 0, gameCanvas.value.width, gameCanvas.value.height)
-  
-  // Draw table background
-  const gradient = ctx.value.createLinearGradient(0, 0, gameCanvas.value.width, gameCanvas.value.height)
-  gradient.addColorStop(0, '#1a472a')
-  gradient.addColorStop(0.5, '#2d5a3d')
-  gradient.addColorStop(1, '#1a472a')
-  ctx.value.fillStyle = gradient
-  ctx.value.fillRect(0, 0, gameCanvas.value.width, gameCanvas.value.height)
-  
-  // Draw border
-  ctx.value.strokeStyle = '#d4af37'
-  ctx.value.lineWidth = 4
-  ctx.value.strokeRect(2, 2, gameCanvas.value.width - 4, gameCanvas.value.height - 4)
-  
-  // Draw center line
-  ctx.value.beginPath()
-  ctx.value.setLineDash([])
-  ctx.value.moveTo(gameCanvas.value.width / 2, 0)
-  ctx.value.lineTo(gameCanvas.value.width / 2, gameCanvas.value.height)
-  ctx.value.strokeStyle = '#d4af37'
-  ctx.value.lineWidth = 2
-  ctx.value.stroke()
+  try {
+    // Clear canvas
+    ctx.value.clearRect(0, 0, gameCanvas.value.width, gameCanvas.value.height)
+    
+    // Draw table background
+    const gradient = ctx.value.createLinearGradient(0, 0, gameCanvas.value.width, gameCanvas.value.height)
+    gradient.addColorStop(0, '#1a472a')
+    gradient.addColorStop(0.5, '#2d5a3d')
+    gradient.addColorStop(1, '#1a472a')
+    ctx.value.fillStyle = gradient
+    ctx.value.fillRect(0, 0, gameCanvas.value.width, gameCanvas.value.height)
+    
+    // Draw border
+    ctx.value.strokeStyle = '#d4af37'
+    ctx.value.lineWidth = 4
+    ctx.value.strokeRect(2, 2, gameCanvas.value.width - 4, gameCanvas.value.height - 4)
+    
+    // Draw center line
+    ctx.value.beginPath()
+    ctx.value.setLineDash([])
+    ctx.value.moveTo(gameCanvas.value.width / 2, 0)
+    ctx.value.lineTo(gameCanvas.value.width / 2, gameCanvas.value.height)
+    ctx.value.strokeStyle = '#d4af37'
+    ctx.value.lineWidth = 2
+    ctx.value.stroke()
 
-  // Draw ball with glow effect
-  ctx.value.beginPath()
-  ctx.value.arc(ball.value.x, ball.value.y, ball.value.radius + 2, 0, Math.PI * 2)
-  ctx.value.fillStyle = 'rgba(255, 255, 255, 0.3)'
-  ctx.value.fill()
-  
-  ctx.value.beginPath()
-  ctx.value.arc(ball.value.x, ball.value.y, ball.value.radius, 0, Math.PI * 2)
-  ctx.value.fillStyle = ball.value.color
-  ctx.value.fill()
-  ctx.value.shadowColor = 'rgba(255, 255, 255, 0.5)'
-  ctx.value.shadowBlur = 10
-  ctx.value.fill()
-  ctx.value.shadowBlur = 0
+    // Draw ball with glow effect
+    ctx.value.beginPath()
+    ctx.value.arc(ball.value.x, ball.value.y, ball.value.radius + 2, 0, Math.PI * 2)
+    ctx.value.fillStyle = 'rgba(255, 255, 255, 0.3)'
+    ctx.value.fill()
+    
+    ctx.value.beginPath()
+    ctx.value.arc(ball.value.x, ball.value.y, ball.value.radius, 0, Math.PI * 2)
+    ctx.value.fillStyle = ball.value.color
+    ctx.value.fill()
+    ctx.value.shadowColor = 'rgba(255, 255, 255, 0.5)'
+    ctx.value.shadowBlur = 10
+    ctx.value.fill()
+    ctx.value.shadowBlur = 0
 
-  // Draw paddles with golden color
-  ctx.value.fillStyle = player1.value.color
-  ctx.value.fillRect(
-    player1.value.x, 
-    player1.value.y - player1.value.height / 2, 
-    player1.value.width, 
-    player1.value.height
-  )
-  
-  ctx.value.fillStyle = player2.value.color
-  ctx.value.fillRect(
-    player2.value.x, 
-    player2.value.y - player2.value.height / 2, 
-    player2.value.width, 
-    player2.value.height
-  )
+    // Draw paddles with golden color
+    ctx.value.fillStyle = player1.value.color
+    ctx.value.fillRect(
+      player1.value.x, 
+      player1.value.y - player1.value.height / 2, 
+      player1.value.width, 
+      player1.value.height
+    )
+    
+    ctx.value.fillStyle = player2.value.color
+    ctx.value.fillRect(
+      player2.value.x, 
+      player2.value.y - player2.value.height / 2, 
+      player2.value.width, 
+      player2.value.height
+    )
 
-  // Draw score with player labels
-  ctx.value.font = 'bold 24px Arial'
-  ctx.value.fillStyle = '#d4af37'
-  ctx.value.textAlign = 'center'
-  ctx.value.fillText(player1Score.value.toString(), gameCanvas.value.width * 0.25, 30)
-  ctx.value.fillText(player2Score.value.toString(), gameCanvas.value.width * 0.75, 30)
-  
-  // Draw player labels
-  ctx.value.font = 'bold 16px Arial'
-  ctx.value.fillStyle = '#e0e0e0'
-  ctx.value.fillText(player1Name.value, gameCanvas.value.width * 0.25, 55)
-  ctx.value.fillText(player2Name.value, gameCanvas.value.width * 0.75, 55)
+    // Draw score with player labels
+    ctx.value.font = 'bold 24px Arial'
+    ctx.value.fillStyle = '#d4af37'
+    ctx.value.textAlign = 'center'
+    ctx.value.fillText(player1Score.value.toString(), gameCanvas.value.width * 0.25, 30)
+    ctx.value.fillText(player2Score.value.toString(), gameCanvas.value.width * 0.75, 30)
+    
+    // Draw player labels
+    ctx.value.font = 'bold 16px Arial'
+    ctx.value.fillStyle = '#e0e0e0'
+    ctx.value.fillText(player1Name.value, gameCanvas.value.width * 0.25, 55)
+    ctx.value.fillText(player2Name.value, gameCanvas.value.width * 0.75, 55)
+  } catch (error) {
+    console.error('Error in drawGame:', error)
+  }
 }
 
 function resetBall() {
@@ -508,9 +535,9 @@ function handleKeyboardMovement() {
     player1.value.y += player1.value.speed
   }
   
-  // Joueur 2 (droite) - I/K ou Numpad 8/2
-  const player2Up = keys.value.KeyI || keys.value.Numpad8
-  const player2Down = keys.value.KeyK || keys.value.Numpad2
+  // Joueur 2 (droite) - Flèches haut/bas
+  const player2Up = keys.value.ArrowUp
+  const player2Down = keys.value.ArrowDown
   
   if (player2Up && !player2Down) {
     player2.value.y -= player2.value.speed
@@ -566,10 +593,6 @@ function handleResize() {
     gameCanvas.value.style.transform = `scale(${scale})`
     gameCanvas.value.style.transformOrigin = 'top left'
   }
-}
-
-function playSound(type: string) {
-  console.log(`Playing sound: ${type}`)
 }
 </script>
 

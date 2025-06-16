@@ -1,309 +1,441 @@
 <template>
-  <div class="game-container">
-    <header class="game-header">
-      <div class="header-container">
-        <div class="header-brand">
-          <div class="billiard-ball ball-8-small"></div>
-          <span class="brand-text">Pong Billard</span>
-        </div>
-        <div class="header-controls">
-          <div class="score-display">
-            <span class="score-label">Score :</span>
-            <span class="score-value">{{ player1Score }} - {{ player2Score }}</span>
-          </div>
-          <button @click="resetGame" class="btn btn-primary">
-            Nouvelle Partie
-          </button>
-          <button @click="togglePause" class="btn btn-secondary">
-            {{ isPaused ? 'Reprendre' : 'Pause' }}
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <main class="game-main">
-      <div class="game-area" ref="gameContainer">
-        <div class="pong-table-container">
-          <div class="pong-table">
-            <canvas
-              ref="gameCanvas"
-              width="800"
-              height="400"
-              class="game-canvas"
-              @touchmove.prevent="handleTouchMove"
-            ></canvas>
-          </div>
-        </div>
-
-        <div v-if="isPaused" class="game-overlay">
-          <h2 class="overlay-title">Jeu en Pause</h2>
-          <button @click="togglePause" class="btn btn-primary btn-large">
-            Reprendre
-          </button>
-        </div>
-
-        <div v-if="gameOver" class="game-overlay">
-          <h2 class="overlay-title">Partie Terminée</h2>
-          <p class="overlay-subtitle">
-            {{ player1Score > player2Score ? 'Joueur 1 a gagné !' : 'Joueur 2 a gagné !' }}
-          </p>
-          <div class="final-score">
-            {{ player1Score }} - {{ player2Score }}
-          </div>
-          <button @click="resetGame" class="btn btn-primary btn-large">
-            Nouvelle Partie
-          </button>
-        </div>
-      </div>
-
-      <div class="billiard-decoration">
-        <div class="billiard-ball ball-1 floating" style="top: 10%; left: 5%;"></div>
-        <div class="billiard-ball ball-2 floating" style="top: 20%; right: 8%;"></div>
-        <div class="billiard-ball ball-3 floating" style="top: 60%; left: 3%;"></div>
-        <div class="billiard-ball ball-4 floating" style="top: 70%; right: 5%;"></div>
-        <div class="billiard-ball ball-5 floating" style="top: 40%; left: 2%;"></div>
-      </div>
-    </main>
-
-    <footer class="game-footer">
-      <div class="footer-container">
-        <p>Utilisez Z/S pour le joueur 1, ↑/↓ pour le joueur 2</p>
-        <p class="copyright">Amusez-vous bien !</p>
-      </div>
-    </footer>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-
-const gameCanvas = ref<HTMLCanvasElement | null>(null);
-const gameContainer = ref<HTMLElement | null>(null);
-let ctx: CanvasRenderingContext2D | null = null;
-
-const isPaused = ref(false);
-const gameOver = ref(false);
-const player1Score = ref(0);
-const player2Score = ref(0);
-const winningScore = 5;
-
-const keys = ref({
-  ArrowUp: false,
-  ArrowDown: false,
-  KeyW: false,
-  KeyS: false
-});
-
-const ball = ref({
-  x: 400,
-  y: 200,
-  radius: 12,
-  speedX: 5,
-  speedY: 3
-});
-
-const player1 = ref({ x: 30, y: 200, width: 8, height: 60, speed: 8 });
-const player2 = ref({ x: 762, y: 200, width: 8, height: 60, speed: 8 });
-
-let animationFrameId: number | null = null;
-
-onMounted(() => {
-  const canvasEl = gameCanvas.value;
-  if (canvasEl) {
-    ctx = canvasEl.getContext('2d');
-  }
-  window.addEventListener('keydown', handleKeyDown);
-  window.addEventListener('keyup', handleKeyUp);
-  window.addEventListener('resize', handleResize);
-  handleResize();
-  startGameLoop();
-});
-
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown);
-  window.removeEventListener('keyup', handleKeyUp);
-  window.removeEventListener('resize', handleResize);
-  if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
-});
-
-watch([player1Score, player2Score], ([s1, s2]) => {
-  if (s1 >= winningScore || s2 >= winningScore) {
-    gameOver.value = true;
-    isPaused.value = true;
-  }
-});
-
-function startGameLoop() {
-  if (!isPaused.value && !gameOver.value) {
-    updateGame();
-    drawGame();
-  }
-  animationFrameId = requestAnimationFrame(startGameLoop);
-}
-
-function updateGame() {
-  const canvasEl = gameCanvas.value!;
-  // Joueur 1 (Z/S)
-  if (keys.value.KeyW && player1.value.y - player1.value.height/2 > 0) {
-    player1.value.y -= player1.value.speed;
-  }
-  if (keys.value.KeyS && player1.value.y + player1.value.height/2 < canvasEl.height) {
-    player1.value.y += player1.value.speed;
-  }
-  // Joueur 2 (↑/↓)
-  if (keys.value.ArrowUp && player2.value.y - player2.value.height/2 > 0) {
-    player2.value.y -= player2.value.speed;
-  }
-  if (keys.value.ArrowDown && player2.value.y + player2.value.height/2 < canvasEl.height) {
-    player2.value.y += player2.value.speed;
-  }
-
-  // Déplacement de la balle
-  ball.value.x += ball.value.speedX;
-  ball.value.y += ball.value.speedY;
-
-  // Rebond haut/bas
-  if (ball.value.y - ball.value.radius <= 0 || ball.value.y + ball.value.radius >= canvasEl.height) {
-    ball.value.speedY *= -1;
-  }
-
-  // Collision avec paddles
-  [player1.value, player2.value].forEach(paddle => {
-    const left   = paddle.x - (paddle === player1.value ? 0 : ball.value.radius);
-    const right  = paddle.x + (paddle === player2.value ? 0 : paddle.width + ball.value.radius);
-    const top    = paddle.y - paddle.height/2;
-    const bottom = paddle.y + paddle.height/2;
-    if (
-      ball.value.x + ball.value.radius > left &&
-      ball.value.x - ball.value.radius < right &&
-      ball.value.y > top &&
-      ball.value.y < bottom
-    ) {
-      ball.value.speedX *= -1;
-    }
+	<div class="game-container">
+	  <header class="game-header">
+		<div class="header-container">
+		  <div class="header-brand">
+			<div class="billiard-ball ball-8-small"></div>
+			<span class="brand-text">Pong Billard - Multijoueur</span>
+		  </div>
+		  <div class="header-controls">
+			<div class="score-display">
+			  <span class="score-label">Score:</span>
+			  <span class="score-value">{{ player1Score }} - {{ player2Score }}</span>
+			</div>
+			<button @click="resetGame" class="btn btn-primary">
+			  <svg class="btn-icon" fill="currentColor" viewBox="0 0 20 20">
+				<path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+			  </svg>
+			  Nouvelle Partie
+			</button>
+			<button @click="togglePause" class="btn btn-secondary">
+			  <svg class="btn-icon" fill="currentColor" viewBox="0 0 20 20">
+				<path v-if="!isPaused" fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+				<path v-else fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+			  </svg>
+			  {{ isPaused ? 'Reprendre' : 'Pause' }}
+			</button>
+		  </div>
+		</div>
+	  </header>
+  
+	  <main class="game-main">
+		<div class="game-area" ref="gameContainer">
+		  <!-- Game table with home page styling -->
+		  <div class="pong-table-container">
+			<div class="pong-table">
+			  <canvas 
+				ref="gameCanvas" 
+				width="800" 
+				height="400" 
+				class="game-canvas"
+			  ></canvas>
+			</div>
+		  </div>
+  
+		  <!-- Pause overlay -->
+		  <div v-if="isPaused" class="game-overlay">
+			<h2 class="overlay-title">Jeu en Pause</h2>
+			<button @click="togglePause" class="btn btn-primary btn-large">
+			  <svg class="btn-icon" fill="currentColor" viewBox="0 0 20 20">
+				<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+			  </svg>
+			  Reprendre
+			</button>
+		  </div>
+  
+		  <!-- Game over overlay -->
+		  <div v-if="gameOver" class="game-overlay">
+			<h2 class="overlay-title">Partie Terminée</h2>
+			<p class="overlay-subtitle">
+			  {{ getWinnerText() }}
+			</p>
+			<div class="final-score">
+			  {{ player1Score }} - {{ player2Score }}
+			</div>
+			<button @click="resetGame" class="btn btn-primary btn-large">
+			  <svg class="btn-icon" fill="currentColor" viewBox="0 0 20 20">
+				<path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+			  </svg>
+			  Nouvelle Partie
+			</button>
+		  </div>
+		</div>
+  
+		<!-- Décoration avec boules de billard -->
+		<div class="billiard-decoration">
+		  <div class="billiard-ball ball-1 floating" style="top: 10%; left: 5%;"></div>
+		  <div class="billiard-ball ball-2 floating" style="top: 20%; right: 8%;"></div>
+		  <div class="billiard-ball ball-3 floating" style="top: 60%; left: 3%;"></div>
+		  <div class="billiard-ball ball-4 floating" style="top: 70%; right: 5%;"></div>
+		  <div class="billiard-ball ball-5 floating" style="top: 40%; left: 2%;"></div>
+		</div>
+	  </main>
+  
+	  <footer class="game-footer">
+		<div class="footer-container">
+		  <div class="controls-info">
+			<div class="player-controls">
+			  <strong>Joueur 1 (Gauche):</strong> Touches W/S
+			</div>
+			<div class="player-controls">
+			  <strong>Joueur 2 (Droite):</strong> Flèches ↑/↓
+			</div>
+		  </div>
+		  <p class="copyright">Amusez-vous bien !</p>
+		</div>
+	  </footer>
+	</div>
+  </template>
+  
+  <script setup>
+  import { ref, onMounted, onUnmounted, watch } from 'vue';
+  
+  // Game state
+  const gameCanvas = ref(null);
+  const gameContainer = ref(null);
+  const ctx = ref(null);
+  const isPaused = ref(false);
+  const gameOver = ref(false);
+  const player1Score = ref(0);
+  const player2Score = ref(0);
+  const winningScore = 5;
+  
+  // Keyboard state for smooth movement
+  const keys = ref({
+	// Joueur 1 (gauche) - W/S
+	KeyW: false,
+	KeyS: false,
+	// Joueur 2 (droite) - Flèches haut/bas
+	ArrowUp: false,
+	ArrowDown: false
   });
-
-  // Score
-  if (ball.value.x - ball.value.radius < 0) {
-    player2Score.value++;
-    resetBall();
-  } else if (ball.value.x + ball.value.radius > gameCanvas.value!.width) {
-    player1Score.value++;
-    resetBall();
+  
+  // Game elements
+  const ball = ref({
+	x: 400,
+	y: 200,
+	radius: 12,
+	speedX: 5,
+	speedY: 3,
+	color: '#ffffff'
+  });
+  
+  const player1 = ref({
+	x: 30,
+	y: 200,
+	width: 8,
+	height: 60,
+	color: '#d4af37',
+	speed: 8
+  });
+  
+  const player2 = ref({
+	x: 762,
+	y: 200,
+	width: 8,
+	height: 60,
+	color: '#d4af37',
+	speed: 8
+  });
+  
+  // Animation frame ID for cleanup
+  let animationFrameId = null;
+  
+  // Initialize game
+  onMounted(() => {
+	ctx.value = gameCanvas.value.getContext('2d');
+	resetBall();
+	window.addEventListener('keydown', handleKeyDown);
+	window.addEventListener('keyup', handleKeyUp);
+	window.addEventListener('resize', handleResize);
+	handleResize();
+	startGameLoop();
+  });
+  
+  onUnmounted(() => {
+	window.removeEventListener('keydown', handleKeyDown);
+	window.removeEventListener('keyup', handleKeyUp);
+	window.removeEventListener('resize', handleResize);
+	if (animationFrameId) {
+	  cancelAnimationFrame(animationFrameId);
+	}
+  });
+  
+  watch([player1Score, player2Score], ([newPlayer1Score, newPlayer2Score]) => {
+	if (newPlayer1Score >= winningScore || newPlayer2Score >= winningScore) {
+	  gameOver.value = true;
+	  isPaused.value = true;
+	}
+  });
+  
+  function startGameLoop() {
+	if (!isPaused.value && !gameOver.value) {
+	  updateGame();
+	  drawGame();
+	}
+	animationFrameId = requestAnimationFrame(startGameLoop);
   }
-}
-
-function drawGame() {
-  if (!ctx || !gameCanvas.value) return;
-  const c = ctx;
-  const w = gameCanvas.value.width, h = gameCanvas.value.height;
-
-  // Fond et bordure
-  const grad = c.createLinearGradient(0,0,w,h);
-  grad.addColorStop(0,'#1a472a');
-  grad.addColorStop(0.5,'#2d5a3d');
-  grad.addColorStop(1,'#1a472a');
-  c.fillStyle = grad;
-  c.fillRect(0,0,w,h);
-
-  c.strokeStyle = '#d4af37';
-  c.lineWidth = 4;
-  c.strokeRect(2,2,w-4,h-4);
-
-  // Ligne centrale
-  c.beginPath();
-  c.setLineDash([]);
-  c.moveTo(w/2,0);
-  c.lineTo(w/2,h);
-  c.stroke();
-
-  // Balle
-  c.beginPath();
-  c.arc(ball.value.x, ball.value.y, ball.value.radius+2, 0, Math.PI*2);
-  c.fillStyle = 'rgba(255,255,255,0.3)';
-  c.fill();
-  c.beginPath();
-  c.arc(ball.value.x, ball.value.y, ball.value.radius, 0, Math.PI*2);
-  c.fillStyle = '#ffffff';
-  c.fill();
-  c.shadowColor = 'rgba(255,255,255,0.5)';
-  c.shadowBlur = 10;
-  c.fill();
-  c.shadowBlur = 0;
-
-  // Paddles
-  c.fillStyle = '#d4af37';
-  c.fillRect(
-    player1.value.x,
-    player1.value.y - player1.value.height/2,
-    player1.value.width,
-    player1.value.height
-  );
-  c.fillRect(
-    player2.value.x,
-    player2.value.y - player2.value.height/2,
-    player2.value.width,
-    player2.value.height
-  );
-
-  // Score
-  c.font = 'bold 24px Arial';
-  c.fillStyle = '#d4af37';
-  c.textAlign = 'center';
-  c.fillText(player1Score.value.toString(), w * 0.25, 30);
-  c.fillText(player2Score.value.toString(), w * 0.75, 30);
-}
-
-function resetBall() {
-  const canvasEl = gameCanvas.value!;
-  ball.value.x = canvasEl.width / 2;
-  ball.value.y = canvasEl.height / 2;
-  ball.value.speedX = 5 * (Math.random()>0.5 ? 1 : -1);
-  ball.value.speedY = 3 * (Math.random()>0.5 ? 1 : -1);
-}
-
-function resetGame() {
-  player1Score.value = 0;
-  player2Score.value = 0;
-  gameOver.value = false;
-  isPaused.value = false;
-  resetBall();
-}
-
-function togglePause() {
-  isPaused.value = !isPaused.value;
-}
-
-function handleKeyDown(e: KeyboardEvent) {
-  if (e.code in keys.value) {
-    keys.value[e.code as keyof typeof keys.value] = true;
-    e.preventDefault();
+  
+  function updateGame() {
+	handleKeyboardMovement();
+	
+	ball.value.x += ball.value.speedX;
+	ball.value.y += ball.value.speedY;
+  
+	// Ball collision with top and bottom walls
+	if (ball.value.y - ball.value.radius <= 0 || ball.value.y + ball.value.radius >= gameCanvas.value.height) {
+	  ball.value.speedY = -ball.value.speedY;
+	  if (ball.value.y - ball.value.radius <= 0) {
+		ball.value.y = ball.value.radius;
+	  } else {
+		ball.value.y = gameCanvas.value.height - ball.value.radius;
+	  }
+	}
+  
+	// Paddle collision detection
+	const player1Collision = checkImprovedPaddleCollision(player1.value);
+	const player2Collision = checkImprovedPaddleCollision(player2.value);
+  
+	if (player1Collision || player2Collision) {
+	  const paddle = player1Collision ? player1.value : player2.value;
+	  const hitPos = (ball.value.y - paddle.y) / (paddle.height / 2);
+	  
+	  ball.value.speedX = -ball.value.speedX;
+	  ball.value.speedY = hitPos * 4;
+	  
+	  const minSpeed = 4;
+	  if (Math.abs(ball.value.speedX) < minSpeed) {
+		ball.value.speedX = ball.value.speedX > 0 ? minSpeed : -minSpeed;
+	  }
+	  
+	  const maxSpeed = 10;
+	  if (Math.abs(ball.value.speedX) < maxSpeed) {
+		ball.value.speedX *= 1.05;
+	  }
+	  
+	  if (player1Collision) {
+		ball.value.x = paddle.x + paddle.width + ball.value.radius + 1;
+	  } else {
+		ball.value.x = paddle.x - ball.value.radius - 1;
+	  }
+	  
+	}
+  
+	// Ball out of bounds (scoring)
+	if (ball.value.x - ball.value.radius < 0) {
+	  player2Score.value++;
+	  resetBall();
+	} else if (ball.value.x + ball.value.radius > gameCanvas.value.width) {
+	  player1Score.value++;
+	  resetBall();
+	}
   }
-}
-
-function handleKeyUp(e: KeyboardEvent) {
-  if (e.code in keys.value) {
-    keys.value[e.code as keyof typeof keys.value] = false;
-    e.preventDefault();
+  
+  function checkImprovedPaddleCollision(paddle) {
+	const ballLeft = ball.value.x - ball.value.radius;
+	const ballRight = ball.value.x + ball.value.radius;
+	const ballTop = ball.value.y - ball.value.radius;
+	const ballBottom = ball.value.y + ball.value.radius;
+	
+	const paddleLeft = paddle.x;
+	const paddleRight = paddle.x + paddle.width;
+	const paddleTop = paddle.y - paddle.height / 2;
+	const paddleBottom = paddle.y + paddle.height / 2;
+	
+	const overlapping = ballRight > paddleLeft && 
+					   ballLeft < paddleRight && 
+					   ballBottom > paddleTop && 
+					   ballTop < paddleBottom;
+	
+	if (!overlapping) return false;
+	
+	if (paddle === player1.value && ball.value.speedX > 0) return false;
+	if (paddle === player2.value && ball.value.speedX < 0) return false;
+	
+	return true;
   }
-}
-
-function handleTouchMove(e: TouchEvent) {
-  if (isPaused.value || gameOver.value) return;
-  const rect = gameCanvas.value!.getBoundingClientRect();
-  player1.value.y = e.touches[0].clientY - rect.top;
-}
-
-function handleResize() {
-  if (gameContainer.value && gameCanvas.value) {
-    const scale = Math.min(1, gameContainer.value.clientWidth / 800);
-    gameCanvas.value.style.transform = `scale(${scale})`;
-    gameCanvas.value.style.transformOrigin = 'top left';
+  
+  function drawGame() {
+	// Clear canvas
+	ctx.value.clearRect(0, 0, gameCanvas.value.width, gameCanvas.value.height);
+	
+	// Draw table background (same as home page)
+	const gradient = ctx.value.createLinearGradient(0, 0, gameCanvas.value.width, gameCanvas.value.height);
+	gradient.addColorStop(0, '#1a472a');
+	gradient.addColorStop(0.5, '#2d5a3d');
+	gradient.addColorStop(1, '#1a472a');
+	ctx.value.fillStyle = gradient;
+	ctx.value.fillRect(0, 0, gameCanvas.value.width, gameCanvas.value.height);
+	
+	// Draw border
+	ctx.value.strokeStyle = '#d4af37';
+	ctx.value.lineWidth = 4;
+	ctx.value.strokeRect(2, 2, gameCanvas.value.width - 4, gameCanvas.value.height - 4);
+	
+	// Draw center line
+	ctx.value.beginPath();
+	ctx.value.setLineDash([]);
+	ctx.value.moveTo(gameCanvas.value.width / 2, 0);
+	ctx.value.lineTo(gameCanvas.value.width / 2, gameCanvas.value.height);
+	ctx.value.strokeStyle = '#d4af37';
+	ctx.value.lineWidth = 2;
+	ctx.value.stroke();
+  
+	// Draw ball with glow effect
+	ctx.value.beginPath();
+	ctx.value.arc(ball.value.x, ball.value.y, ball.value.radius + 2, 0, Math.PI * 2);
+	ctx.value.fillStyle = 'rgba(255, 255, 255, 0.3)';
+	ctx.value.fill();
+	
+	ctx.value.beginPath();
+	ctx.value.arc(ball.value.x, ball.value.y, ball.value.radius, 0, Math.PI * 2);
+	ctx.value.fillStyle = ball.value.color;
+	ctx.value.fill();
+	ctx.value.shadowColor = 'rgba(255, 255, 255, 0.5)';
+	ctx.value.shadowBlur = 10;
+	ctx.value.fill();
+	ctx.value.shadowBlur = 0;
+  
+	// Draw paddles with golden color
+	ctx.value.fillStyle = player1.value.color;
+	ctx.value.fillRect(
+	  player1.value.x, 
+	  player1.value.y - player1.value.height / 2, 
+	  player1.value.width, 
+	  player1.value.height
+	);
+	
+	ctx.value.fillStyle = player2.value.color;
+	ctx.value.fillRect(
+	  player2.value.x, 
+	  player2.value.y - player2.value.height / 2, 
+	  player2.value.width, 
+	  player2.value.height
+	);
+  
+	// Draw score with player labels
+	ctx.value.font = 'bold 24px Arial';
+	ctx.value.fillStyle = '#d4af37';
+	ctx.value.textAlign = 'center';
+	ctx.value.fillText(player1Score.value.toString(), gameCanvas.value.width * 0.25, 30);
+	ctx.value.fillText(player2Score.value.toString(), gameCanvas.value.width * 0.75, 30);
+	
+	// Draw player labels
+	ctx.value.font = 'bold 16px Arial';
+	ctx.value.fillStyle = '#e0e0e0';
+	ctx.value.fillText('Joueur 1', gameCanvas.value.width * 0.25, 55);
+	ctx.value.fillText('Joueur 2', gameCanvas.value.width * 0.75, 55);
   }
-}
+  
+  function resetBall() {
+	ball.value.x = gameCanvas.value.width / 2;
+	ball.value.y = gameCanvas.value.height / 2;
+	ball.value.speedX = 5 * (Math.random() > 0.5 ? 1 : -1);
+	ball.value.speedY = 3 * (Math.random() > 0.5 ? 1 : -1);
+  }
+  
+  function resetGame() {
+	player1Score.value = 0;
+	player2Score.value = 0;
+	gameOver.value = false;
+	isPaused.value = false;
+	resetBall();
+  }
+  
+  function togglePause() {
+	isPaused.value = !isPaused.value;
+  }
+  
+  function getWinnerText() {
+	if (player1Score.value > player2Score.value) {
+	  return 'Joueur 1 a gagné !';
+	} else {
+	  return 'Joueur 2 a gagné !';
+	}
+  }
+  
+  function handleKeyboardMovement() {
+	if (isPaused.value || gameOver.value) return;
+	
+	// Joueur 1 (gauche) - W/S ou flèches
+	const player1Up = keys.value.KeyW;
+	const player1Down = keys.value.KeyS;
+	
+	if (player1Up && !player1Down) {
+	  player1.value.y -= player1.value.speed;
+	} else if (player1Down && !player1Up) {
+	  player1.value.y += player1.value.speed;
+	}
+	
+	// Joueur 2 (droite) - Flèches haut/bas
+	const player2Up = keys.value.ArrowUp;
+	const player2Down = keys.value.ArrowDown;
+	
+	if (player2Up && !player2Down) {
+	  player2.value.y -= player2.value.speed;
+	} else if (player2Down && !player2Up) {
+	  player2.value.y += player2.value.speed;
+	}
+	
+	// Contraintes pour joueur 1
+	if (player1.value.y - player1.value.height / 2 < 0) {
+	  player1.value.y = player1.value.height / 2;
+	} else if (player1.value.y + player1.value.height / 2 > gameCanvas.value.height) {
+	  player1.value.y = gameCanvas.value.height - player1.value.height / 2;
+	}
+	
+	// Contraintes pour joueur 2
+	if (player2.value.y - player2.value.height / 2 < 0) {
+	  player2.value.y = player2.value.height / 2;
+	} else if (player2.value.y + player2.value.height / 2 > gameCanvas.value.height) {
+	  player2.value.y = gameCanvas.value.height - player2.value.height / 2;
+	}
+  }
+  
+  function handleKeyDown(e) {
+	if (e.code in keys.value) {
+	  keys.value[e.code] = true;
+	  e.preventDefault();
+	}
+	
+	if (e.key === 'p' || e.key === 'Escape') {
+	  togglePause();
+	} else if (e.key === 'r' || e.key === 'R') {
+	  if (gameOver.value) {
+		resetGame();
+	  }
+	}
+  }
+  
+  function handleKeyUp(e) {
+	if (e.code in keys.value) {
+	  keys.value[e.code] = false;
+	  e.preventDefault();
+	}
+  }
+  
+  function handleResize() {
+	if (gameContainer.value && gameCanvas.value) {
+	  const containerWidth = gameContainer.value.clientWidth;
+	  const scale = Math.min(1, containerWidth / 800);
+	  
+	  gameCanvas.value.style.transform = `scale(${scale})`;
+	  gameCanvas.value.style.transformOrigin = 'top left';
+	}
+  }
 </script>
-
-<style scoped>
+  
+  <style scoped>
   .game-container {
 	min-height: 100vh;
 	background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #1a472a 100%);
@@ -554,6 +686,21 @@ function handleResize() {
 	font-size: 0.9rem;
   }
   
+  .controls-info {
+	display: flex;
+	justify-content: center;
+	gap: 2rem;
+	margin-bottom: 0.5rem;
+	flex-wrap: wrap;
+  }
+  
+  .player-controls {
+	padding: 0.5rem 1rem;
+	background: rgba(212, 175, 55, 0.1);
+	border-radius: 0.5rem;
+	border: 1px solid rgba(212, 175, 55, 0.3);
+  }
+  
   .copyright {
 	margin-top: 0.5rem;
 	font-size: 0.8rem;
@@ -578,6 +725,11 @@ function handleResize() {
 	}
 	
 	.header-controls {
+	  flex-direction: column;
+	  gap: 0.5rem;
+	}
+	
+	.controls-info {
 	  flex-direction: column;
 	  gap: 0.5rem;
 	}

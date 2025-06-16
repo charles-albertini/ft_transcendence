@@ -54,7 +54,7 @@ onMounted(() => {
         // Tous les joueurs sont prêts → on démarre la partie
         router.push({
           name: 'GamemultiOnline',
-          query: { id: gameId, playerId: playerId }
+          query: { id: gameId, playerId }
         });
         break;
       // autres cas éventuels…

@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 const PORT = 3003;
 const games = {};
 
-/** État initial d’une partie */
+/** État initial d'une partie */
 function createInitialGameState(maxPlayers) {
   return {
     ballX: 400, ballY: 250, ballSize: 10,
@@ -27,7 +27,7 @@ function broadcastToGame(gameId, msgObj) {
   });
 }
 
-/** Broadcast à tous sauf l’émetteur */
+/** Broadcast à tous sauf l'émetteur */
 function broadcastToOthers(gameId, senderWs, msgObj) {
   const room = games[gameId];
   if (!room) return;
@@ -64,6 +64,8 @@ wss.on('connection', ws => {
         };
         ws.playerId = 'player1';
         ws.gameId   = gameId;
+
+        console.log(`[Server] Partie créée: ${gameId} par ${ws.playerId}`);
 
         // Ack création
         ws.send(JSON.stringify({
@@ -105,6 +107,8 @@ wss.on('connection', ws => {
         ws.playerId = assigned;
         ws.gameId   = joinId;
 
+        console.log(`[Server] ${assigned} rejoint la partie ${joinId}`);
+
         // Ack join
         ws.send(JSON.stringify({
           type: 'join-success',
@@ -133,6 +137,7 @@ wss.on('connection', ws => {
         const { gameId: gpId } = payload;
         const room = games[gpId];
         if (!room) return;
+        console.log(`[Server] get-players pour ${gpId}, joueurs: ${room.players.map(p=>p.id)}`);
         // Late-joiners récupèrent la liste + état
         ws.send(JSON.stringify({
           type: 'player-joined',
@@ -150,17 +155,31 @@ wss.on('connection', ws => {
         const { gameId: prId, playerId: pid } = payload;
         const room = games[prId];
         if (!room) return;
+        
+        console.log(`[Server] ${pid} est prêt dans ${prId}`);
+        
         if (!room.readyPlayers.includes(pid)) {
           room.readyPlayers.push(pid);
         }
-        // Broadcast ✓
+        
+        console.log(`[Server] Joueurs prêts: ${room.readyPlayers.length}/${room.maxPlayers}`);
+        
+        // Broadcast état des joueurs prêts
         broadcastToGame(prId, {
           type: 'players-ready',
           payload: { readyPlayers: room.readyPlayers }
         });
+        
         // Si tous prêts → démarrage
         if (room.readyPlayers.length === room.maxPlayers) {
+          console.log(`[Server] Tous les joueurs sont prêts, démarrage de la partie ${prId}`);
           room.gameState.gameStarted = true;
+          // Reset de la balle pour le démarrage
+          room.gameState.ballX = 400;
+          room.gameState.ballY = 250;
+          room.gameState.ballSpeedX = Math.random() > 0.5 ? 5 : -5;
+          room.gameState.ballSpeedY = Math.random() > 0.5 ? 3 : -3;
+          
           broadcastToGame(prId, {
             type: 'all-ready',
             payload: { gameState: room.gameState }
@@ -173,9 +192,9 @@ wss.on('connection', ws => {
         const { gameId: pmId, playerId: pid, moveData } = payload;
         const room = games[pmId];
         if (!room || !room.gameState.gameStarted) return;
-        // Met à jour la position du paddle sur le serveur (optionnel)
+        // Met à jour la position du paddle sur le serveur
         room.gameState.paddles[pid] = moveData.paddlePosition;
-        // Informe l’autre joueur
+        // Informe les autres joueurs
         broadcastToOthers(pmId, ws, {
           type: 'opponent-move',
           payload: { playerId: pid, moveData }
@@ -183,18 +202,42 @@ wss.on('connection', ws => {
         break;
       }
 
-      // … vous pouvez ajouter ici 'game-update' si besoin (sync serveur) …
-
+      case 'game-update': {
+        const { gameId: guId, gameState: updateState } = payload;
+        const room = games[guId];
+        if (!room || !room.gameState.gameStarted) return;
+        
+        // Met à jour l'état du jeu sur le serveur
+        if (updateState.ballX !== undefined) room.gameState.ballX = updateState.ballX;
+        if (updateState.ballY !== undefined) room.gameState.ballY = updateState.ballY;
+        if (updateState.ballSpeedX !== undefined) room.gameState.ballSpeedX = updateState.ballSpeedX;
+        if (updateState.ballSpeedY !== undefined) room.gameState.ballSpeedY = updateState.ballSpeedY;
+        if (updateState.score) Object.assign(room.gameState.score, updateState.score);
+        
+        // Broadcast aux autres joueurs (pas à celui qui a envoyé)
+        broadcastToOthers(guId, ws, {
+          type: 'game-update',
+          payload: { gameState: updateState }
+        });
+        break;
+      }
     }
   });
 
   ws.on('close', () => {
     const { gameId, playerId } = ws;
+    if (!gameId || !playerId) return;
+    
+    console.log(`[Server] ${playerId} déconnecté de ${gameId}`);
+    
     const room = games[gameId];
     if (!room) return;
+    
     room.players = room.players.filter(p=>p.id!==playerId);
     room.readyPlayers = room.readyPlayers.filter(r=>r!==playerId);
+    
     if (room.players.length === 0) {
+      console.log(`[Server] Suppression de la partie vide ${gameId}`);
       delete games[gameId];
     } else {
       broadcastToGame(gameId, {
@@ -209,3 +252,5 @@ wss.on('connection', ws => {
     }
   });
 });
+
+console.log(`[Server] WebSocket server démarré sur le port ${PORT}`);

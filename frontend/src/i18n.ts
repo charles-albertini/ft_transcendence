@@ -24,6 +24,16 @@ const messages = {
     feature2Description: 'Play against your friends',
     feature3Title: 'Competitive Play',
     feature3Description: 'Participate in tournaments',
+    feature4Title: 'My Profile',
+    feature4Description: 'Manage your account',
+    
+    // Messages pour popup de profil
+    accessRestricted: 'Access Restricted',
+    profileAccessTitle: 'Profile Access',
+    profileLoginRequired: 'You must be logged in to access your profile and manage your game statistics.',
+    profileStatsFeature: 'Game statistics',
+    profileAchievementsFeature: 'Achievements and rewards',
+    profileSettingsFeature: 'Custom settings',
     
     // Boutons d'action
     getStarted: 'Get Started',
@@ -61,11 +71,62 @@ const messages = {
     and: 'and',
     privacyPolicy: 'Privacy Policy',
     
+    // 2FA / Authentification à deux facteurs
+    twoFactorAuth: 'Two-Factor Authentication',
+    enter2FACode: 'Please enter the 6-digit code from your authenticator app',
+    authCode: 'Authentication Code',
+    sixDigitCode: '000000',
+    verifying: 'Verifying...',
+    verify: 'Verify',
+    twoFARequired: '2FA authentication required',
+    invalid2FACode: 'Invalid 2FA code',
+    twoFAVerificationError: '2FA verification error',
+    loginSuccessful: 'Login successful!',
+    loginProcessingError: 'Error processing login',
+    
+    // Setup 2FA
+    twoFactorSetup: 'Two-Factor Authentication Setup',
+    twoFactorDescription: 'Add an extra layer of security to your account',
+    enableTwoFactor: 'Enable Two-Factor Authentication',
+    twoFactorBenefit: 'Protect your account with an additional security layer',
+    generatingQRCode: 'Generating QR Code...',
+    setupInstructions: 'Setup Instructions',
+    downloadAuthApp: 'Download an authenticator app (Google Authenticator, Authy, etc.)',
+    scanQRCode: 'Scan the QR code with your authenticator app',
+    enterVerificationCode: 'Enter the verification code below',
+    qrCodeAlt: 'QR Code for 2FA setup',
+    cantScanQR: 'Can\'t scan the QR code?',
+    showSecret: 'Show manual entry key',
+    hideSecret: 'Hide manual entry key',
+    copy: 'Copy',
+    copied: 'Copied!',
+    verifySetup: 'Verify Setup',
+    enterSixDigitCode: 'Enter 6-digit code',
+    invalidCode: 'Invalid verification code',
+    verificationError: 'Verification error',
+    codeMustBe6Digits: 'Code must be exactly 6 digits',
+    codeOnlyDigits: 'Code must contain only digits (0-9)',
+    twoFactorEnabled: 'Two-factor authentication enabled successfully!',
+    skipForNow: 'Skip for now',
+    complete: 'Complete',
+    continue: 'Continue',
+    
+    // Messages d'inscription
+    username: 'Username',
+    signingUp: 'Signing up...',
+    registrationSuccessful: 'Registration successful!',
+    registrationError: 'Registration error',
+    allFieldsRequired: 'All fields are required',
+    passwordsDoNotMatch: 'Passwords do not match',
+    passwordTooShort: 'Password must be at least 8 characters',
+    
     // Messages d'erreur
     invalidCredentials: 'Invalid credentials',
     connectionError: 'Connection error',
     signupError: 'Signup error',
     passwordMismatch: 'Passwords do not match',
+    tooManyAttempts: 'Too many attempts. Please try again later.',
+    serverError: 'Server error. Please try again later.',
     
     // Force du mot de passe
     passwordWeak: 'Weak',
@@ -95,7 +156,59 @@ const messages = {
     gamesPlayed: 'Games Played',
     gamesWon: 'Games Won',
     winRate: 'Win Rate',
-    bestScore: 'Best Score'
+    bestScore: 'Best Score',
+    
+    // Profil utilisateur détaillé
+    changeAvatar: 'Change Avatar',
+    rank: 'Rank',
+    enterUsername: 'Enter username',
+    level: 'Level',
+    pongRating: 'Pong Rating',
+    status: 'Status',
+    online: 'Online',
+    memberSince: 'Member Since',
+    title: 'Title',
+    saveProfile: 'Save Profile',
+    
+    // Statistiques Pong
+    pongStatistics: 'Pong Statistics',
+    matchesPlayed: 'Matches Played',
+    victories: 'Victories',
+    rating: 'Rating',
+    winRateEvolution: 'Win Rate Evolution',
+    pongSkills: 'Pong Skills',
+    ballControl: 'Ball Control',
+    defensivePlay: 'Defensive Play',
+    aggressivePlay: 'Aggressive Play',
+    reactionTime: 'Reaction Time',
+    accuracy: 'Accuracy',
+    consistency: 'Consistency',
+    
+    // Historique des matches
+    matchHistory: 'Match History',
+    opponent: 'Opponent',
+    duration: 'Duration',
+    result: 'Result',
+    win: 'Win',
+    loss: 'Loss',
+    points: 'Points',
+    
+    // Activité quotidienne
+    dailyActivity: 'Daily Activity',
+    totalThisWeek: 'Total This Week',
+    avgPerDay: 'Average Per Day',
+    bestDay: 'Best Day',
+    
+    // Boutons d'action profil
+    playGame: 'Play Game',
+    exportStats: 'Export Stats',
+    
+    // États de l'interface
+    loading: 'Loading',
+    current: 'Current',
+    
+    // Boutons de jeu
+    playPong: 'Play Pong'
   },
   fr: {
     // Navigation
@@ -120,6 +233,16 @@ const messages = {
     feature2Description: 'Jouez contre vos amis',
     feature3Title: 'Jeu Compétitif',
     feature3Description: 'Participez à des tournois',
+    feature4Title: 'Mon Profil',
+    feature4Description: 'Gérez votre compte',
+    
+    // Messages pour popup de profil
+    accessRestricted: 'Accès restreint',
+    profileAccessTitle: 'Accès au Profil',
+    profileLoginRequired: 'Vous devez être connecté pour accéder à votre profil et gérer vos statistiques de jeu.',
+    profileStatsFeature: 'Statistiques de jeu',
+    profileAchievementsFeature: 'Succès et récompenses',
+    profileSettingsFeature: 'Paramètres personnalisés',
     
     // Boutons d'action
     getStarted: 'Commencer',
@@ -157,6 +280,55 @@ const messages = {
     and: 'et la',
     privacyPolicy: 'Politique de confidentialité',
     
+    // 2FA / Authentification à deux facteurs
+    twoFactorAuth: 'Authentification à deux facteurs',
+    enter2FACode: 'Veuillez entrer le code à 6 chiffres de votre application d\'authentification',
+    authCode: 'Code d\'authentification',
+    sixDigitCode: '000000',
+    verifying: 'Vérification...',
+    verify: 'Vérifier',
+    twoFARequired: 'Authentification 2FA requise',
+    invalid2FACode: 'Code 2FA invalide',
+    twoFAVerificationError: 'Erreur de vérification 2FA',
+    loginSuccessful: 'Connexion réussie !',
+    loginProcessingError: 'Erreur lors du traitement de la connexion',
+    
+    // Configuration 2FA
+    twoFactorSetup: 'Configuration de l\'authentification à deux facteurs',
+    twoFactorDescription: 'Ajoutez une couche de sécurité supplémentaire à votre compte',
+    enableTwoFactor: 'Activer l\'authentification à deux facteurs',
+    twoFactorBenefit: 'Protégez votre compte avec une couche de sécurité supplémentaire',
+    generatingQRCode: 'Génération du code QR...',
+    setupInstructions: 'Instructions de configuration',
+    downloadAuthApp: 'Téléchargez une application d\'authentification (Google Authenticator, Authy, etc.)',
+    scanQRCode: 'Scannez le code QR avec votre application d\'authentification',
+    enterVerificationCode: 'Entrez le code de vérification ci-dessous',
+    qrCodeAlt: 'Code QR pour la configuration 2FA',
+    cantScanQR: 'Impossible de scanner le code QR ?',
+    showSecret: 'Afficher la clé de saisie manuelle',
+    hideSecret: 'Masquer la clé de saisie manuelle',
+    copy: 'Copier',
+    copied: 'Copié !',
+    verifySetup: 'Vérifier la configuration',
+    enterSixDigitCode: 'Entrez le code à 6 chiffres',
+    invalidCode: 'Code de vérification invalide',
+    verificationError: 'Erreur de vérification',
+    codeMustBe6Digits: 'Le code doit contenir exactement 6 chiffres',
+    codeOnlyDigits: 'Le code ne doit contenir que des chiffres (0-9)',
+    twoFactorEnabled: 'Authentification à deux facteurs activée avec succès !',
+    skipForNow: 'Ignorer pour l\'instant',
+    complete: 'Terminer',
+    continue: 'Continuer',
+    
+    // Messages d'inscription
+    username: 'Nom d\'utilisateur',
+    signingUp: 'Inscription...',
+    registrationSuccessful: 'Inscription réussie !',
+    registrationError: 'Erreur d\'inscription',
+    allFieldsRequired: 'Tous les champs sont requis',
+    passwordsDoNotMatch: 'Les mots de passe ne correspondent pas',
+    passwordTooShort: 'Le mot de passe doit contenir au moins 8 caractères',
+    
     // Messages d'erreur
     invalidCredentials: 'Identifiants invalides',
     connectionError: 'Erreur de connexion',
@@ -191,7 +363,59 @@ const messages = {
     gamesPlayed: 'Parties jouées',
     gamesWon: 'Parties gagnées',
     winRate: 'Taux de victoire',
-    bestScore: 'Meilleur score'
+    bestScore: 'Meilleur score',
+    
+    // Profil utilisateur détaillé
+    changeAvatar: 'Changer l\'avatar',
+    rank: 'Rang',
+    enterUsername: 'Entrez le nom d\'utilisateur',
+    level: 'Niveau',
+    pongRating: 'Classement Pong',
+    status: 'Statut',
+    online: 'En ligne',
+    memberSince: 'Membre depuis',
+    title: 'Titre',
+    saveProfile: 'Sauvegarder le profil',
+    
+    // Statistiques Pong
+    pongStatistics: 'Statistiques Pong',
+    matchesPlayed: 'Matches jouées',
+    victories: 'Victoires',
+    rating: 'Classement',
+    winRateEvolution: 'Évolution du taux de victoire',
+    pongSkills: 'Compétences Pong',
+    ballControl: 'Contrôle de balle',
+    defensivePlay: 'Jeu défensif',
+    aggressivePlay: 'Jeu agressif',
+    reactionTime: 'Temps de réaction',
+    accuracy: 'Précision',
+    consistency: 'Régularité',
+    
+    // Historique des matches
+    matchHistory: 'Historique des matches',
+    opponent: 'Adversaire',
+    duration: 'Durée',
+    result: 'Résultat',
+    win: 'Victoire',
+    loss: 'Défaite',
+    points: 'Points',
+    
+    // Activité quotidienne
+    dailyActivity: 'Activité quotidienne',
+    totalThisWeek: 'Total cette semaine',
+    avgPerDay: 'Moyenne par jour',
+    bestDay: 'Meilleur jour',
+    
+    // Boutons d'action profil
+    playGame: 'Jouer',
+    exportStats: 'Exporter les stats',
+    
+    // États de l'interface
+    loading: 'Chargement',
+    current: 'Actuel',
+    
+    // Boutons de jeu
+    playPong: 'Jouer au Pong'
   },
   es: {
     // Navigation
@@ -216,6 +440,16 @@ const messages = {
     feature2Description: 'Juega contra tus amigos',
     feature3Title: 'Juego Competitivo',
     feature3Description: 'Participa en torneos',
+    feature4Title: 'Mi Perfil',
+    feature4Description: 'Gestiona tu cuenta',
+    
+    // Messages pour popup de profil
+    accessRestricted: 'Acceso Restringido',
+    profileAccessTitle: 'Acceso al Perfil',
+    profileLoginRequired: 'Debes estar conectado para acceder a tu perfil y gestionar tus estadísticas de juego.',
+    profileStatsFeature: 'Estadísticas de juego',
+    profileAchievementsFeature: 'Logros y recompensas',
+    profileSettingsFeature: 'Configuración personalizada',
     
     // Boutons d'action
     getStarted: 'Comenzar',
@@ -253,11 +487,62 @@ const messages = {
     and: 'y la',
     privacyPolicy: 'Política de Privacidad',
     
+    // 2FA / Autenticación de dos factores
+    twoFactorAuth: 'Autenticación de Dos Factores',
+    enter2FACode: 'Por favor ingresa el código de 6 dígitos de tu aplicación de autenticación',
+    authCode: 'Código de Autenticación',
+    sixDigitCode: '000000',
+    verifying: 'Verificando...',
+    verify: 'Verificar',
+    twoFARequired: 'Autenticación 2FA requerida',
+    invalid2FACode: 'Código 2FA inválido',
+    twoFAVerificationError: 'Error de verificación 2FA',
+    loginSuccessful: '¡Inicio de sesión exitoso!',
+    loginProcessingError: 'Error al procesar el inicio de sesión',
+    
+    // Configuración 2FA
+    twoFactorSetup: 'Configuración de Autenticación de Dos Factores',
+    twoFactorDescription: 'Agrega una capa adicional de seguridad a tu cuenta',
+    enableTwoFactor: 'Habilitar Autenticación de Dos Factores',
+    twoFactorBenefit: 'Protege tu cuenta con una capa adicional de seguridad',
+    generatingQRCode: 'Generando Código QR...',
+    setupInstructions: 'Instrucciones de Configuración',
+    downloadAuthApp: 'Descarga una aplicación de autenticación (Google Authenticator, Authy, etc.)',
+    scanQRCode: 'Escanea el código QR con tu aplicación de autenticación',
+    enterVerificationCode: 'Ingresa el código de verificación a continuación',
+    qrCodeAlt: 'Código QR para configuración 2FA',
+    cantScanQR: '¿No puedes escanear el código QR?',
+    showSecret: 'Mostrar clave de entrada manual',
+    hideSecret: 'Ocultar clave de entrada manual',
+    copy: 'Copiar',
+    copied: '¡Copiado!',
+    verifySetup: 'Verificar Configuración',
+    enterSixDigitCode: 'Ingresa código de 6 dígitos',
+    invalidCode: 'Código de verificación inválido',
+    verificationError: 'Error de verificación',
+    codeMustBe6Digits: 'El código debe contener exactamente 6 dígitos',
+    codeOnlyDigits: 'El código debe contener solo dígitos (0-9)',
+    twoFactorEnabled: '¡Autenticación de dos factores habilitada exitosamente!',
+    skipForNow: 'Omitir por ahora',
+    complete: 'Completar',
+    continue: 'Continuar',
+    
+    // Mensajes de registro
+    username: 'Nombre de Usuario',
+    signingUp: 'Registrándose...',
+    registrationSuccessful: '¡Registro exitoso!',
+    registrationError: 'Error de registro',
+    allFieldsRequired: 'Todos los campos son requeridos',
+    passwordsDoNotMatch: 'Las contraseñas no coinciden',
+    passwordTooShort: 'La contraseña debe tener al menos 8 caracteres',
+    
     // Messages d'erreur
     invalidCredentials: 'Credenciales inválidas',
     connectionError: 'Error de conexión',
     signupError: 'Error de registro',
     passwordMismatch: 'Las contraseñas no coinciden',
+    tooManyAttempts: 'Demasiados intentos. Por favor inténtalo de nuevo más tarde.',
+    serverError: 'Error del servidor. Por favor inténtalo de nuevo más tarde.',
     
     // Force du mot de passe
     passwordWeak: 'Débil',
@@ -287,107 +572,64 @@ const messages = {
     gamesPlayed: 'Partidas Jugadas',
     gamesWon: 'Partidas Ganadas',
     winRate: 'Tasa de Victoria',
-    bestScore: 'Mejor Puntuación'
+    bestScore: 'Mejor Puntuación',
+    
+    // Profil utilisateur détaillé
+    changeAvatar: 'Cambiar Avatar',
+    rank: 'Rango',
+    enterUsername: 'Ingresa nombre de usuario',
+    level: 'Nivel',
+    pongRating: 'Clasificación Pong',
+    status: 'Estado',
+    online: 'En línea',
+    memberSince: 'Miembro desde',
+    title: 'Título',
+    saveProfile: 'Guardar perfil',
+    
+    // Statistiques Pong
+    pongStatistics: 'Estadísticas Pong',
+    matchesPlayed: 'Partidas jugadas',
+    victories: 'Victorias',
+    rating: 'Clasificación',
+    winRateEvolution: 'Evolución de la tasa de victoria',
+    pongSkills: 'Habilidades Pong',
+    ballControl: 'Control de pelota',
+    defensivePlay: 'Juego defensivo',
+    aggressivePlay: 'Juego agresivo',
+    reactionTime: 'Tiempo de reacción',
+    accuracy: 'Precisión',
+    consistency: 'Consistencia',
+    
+    // Historique des matches
+    matchHistory: 'Historial de partidas',
+    opponent: 'Oponente',
+    duration: 'Duración',
+    result: 'Resultado',
+    win: 'Victoria',
+    loss: 'Derrota',
+    points: 'Puntos',
+    
+    // Activité quotidienne
+    dailyActivity: 'Actividad diaria',
+    totalThisWeek: 'Total esta semana',
+    avgPerDay: 'Promedio por día',
+    bestDay: 'Mejor día',
+    
+    // Boutons d'action profil
+    playGame: 'Jugar',
+    exportStats: 'Exportar estadísticas',
+    
+    // États de l'interface
+    loading: 'Loading',
+    current: 'Current',
+    
+    // Boutons de jeu
+    playPong: 'Play Pong'
   },
-  de: {
-    // Navigation
-    gameTitle: 'Billard Pong',
-    home: 'Startseite',
-    play: 'Spielen',
-    profile: 'Profil',
-    signIn: 'Anmelden',
-    signUp: 'Registrieren',
-    logout: 'Abmelden',
-    
-    // Messages de navigation
-    redirectingToSignIn: 'Weiterleitung zur Anmeldung...',
-    redirectingToSignUp: 'Weiterleitung zur Registrierung...',
-    
-    // Page d'accueil
-    welcomeTitle: 'Willkommen bei Billard Pong',
-    gameDescription: 'Entdecken Sie das klassische Pong-Spiel mit einem Billard-Touch',
-    feature1Title: 'Klassisches Gameplay',
-    feature1Description: 'Spielen Sie gegen intelligente KI',
-    feature2Title: 'Mehrspieler',
-    feature2Description: 'Spielen Sie gegen Ihre Freunde',
-    feature3Title: 'Wettkampfspiel',
-    feature3Description: 'Nehmen Sie an Turnieren teil',
-    
-    // Boutons d'action
-    getStarted: 'Loslegen',
-    learnMore: 'Mehr erfahren',
-    startPlaying: 'Spielen beginnen',
-    
-    // Authentification
-    backToHome: 'Zurück zur Startseite',
-    signInTitle: 'Anmelden',
-    signInSubtitle: 'Willkommen zurück bei Billard Pong',
-    signUpTitle: 'Registrieren',
-    signUpSubtitle: 'Erstellen Sie Ihr Billard Pong Konto',
-    email: 'E-Mail',
-    emailPlaceholder: 'Geben Sie Ihre E-Mail ein',
-    password: 'Passwort',
-    passwordPlaceholder: 'Geben Sie Ihr Passwort ein',
-    firstName: 'Vorname',
-    firstNamePlaceholder: 'Geben Sie Ihren Vornamen ein',
-    lastName: 'Nachname',
-    lastNamePlaceholder: 'Geben Sie Ihren Nachnamen ein',
-    confirmPassword: 'Passwort bestätigen',
-    confirmPasswordPlaceholder: 'Bestätigen Sie Ihr Passwort',
-    rememberMe: 'Angemeldet bleiben',
-    forgotPassword: 'Passwort vergessen?',
-    signingIn: 'Anmeldung...',
-    creatingAccount: 'Konto erstellen...',
-    createAccount: 'Konto erstellen',
-    orContinueWith: 'oder fortfahren mit',
-    googleSignIn: 'Mit Google anmelden',
-    googleSignUp: 'Mit Google registrieren',
-    noAccount: 'Kein Konto?',
-    alreadyHaveAccount: 'Bereits ein Konto?',
-    acceptTerms: 'Ich akzeptiere die',
-    termsOfService: 'Nutzungsbedingungen',
-    and: 'und die',
-    privacyPolicy: 'Datenschutzrichtlinie',
-    
-    // Messages d'erreur
-    invalidCredentials: 'Ungültige Anmeldedaten',
-    connectionError: 'Verbindungsfehler',
-    signupError: 'Registrierungsfehler',
-    passwordMismatch: 'Passwörter stimmen nicht überein',
-    
-    // Force du mot de passe
-    passwordWeak: 'Schwach',
-    passwordMedium: 'Mittel',
-    passwordStrong: 'Stark',
-    
-    // Messages non implémentés
-    googleSignInNotImplemented: 'Google-Anmeldung noch nicht implementiert',
-    googleSignUpNotImplemented: 'Google-Registrierung noch nicht implementiert',
-    forgotPasswordNotImplemented: 'Passwort vergessen noch nicht implementiert',
-    termsNotImplemented: 'Bedingungen noch nicht implementiert',
-    privacyNotImplemented: 'Datenschutzrichtlinie noch nicht implementiert',
-    
-    // Jeu
-    player1: 'Spieler 1',
-    player2: 'Spieler 2',
-    score: 'Punktzahl',
-    gameOver: 'Spiel beendet',
-    winner: 'Gewinner',
-    playAgain: 'Nochmal spielen',
-    pause: 'Pause',
-    resume: 'Fortsetzen',
-    
-    // Profil
-    profileTitle: 'Profil',
-    statistics: 'Statistiken',
-    gamesPlayed: 'Gespielte Spiele',
-    gamesWon: 'Gewonnene Spiele',
-    winRate: 'Gewinnrate',
-    bestScore: 'Beste Punktzahl'
-  },
+  
   it: {
     // Navigation
-    gameTitle: 'Pong Biliardo',
+    gameTitle: 'ft_transcendence',
     home: 'Home',
     play: 'Gioca',
     profile: 'Profilo',
@@ -408,6 +650,16 @@ const messages = {
     feature2Description: 'Gioca contro i tuoi amici',
     feature3Title: 'Gioco Competitivo',
     feature3Description: 'Partecipa ai tornei',
+    feature4Title: 'Il Mio Profilo',
+    feature4Description: 'Gestisci il tuo account',
+    
+    // Messages pour popup de profil
+    accessRestricted: 'Accesso Limitato',
+    profileAccessTitle: 'Accesso al Profilo',
+    profileLoginRequired: 'Devi essere connesso per accedere al tuo profilo e gestire le tue statistiche di gioco.',
+    profileStatsFeature: 'Statistiche di gioco',
+    profileAchievementsFeature: 'Successi e ricompense',
+    profileSettingsFeature: 'Impostazioni personalizzate',
     
     // Boutons d'action
     getStarted: 'Inizia',
@@ -445,11 +697,62 @@ const messages = {
     and: 'e la',
     privacyPolicy: 'Politica sulla Privacy',
     
+    // 2FA / Autenticazione a due fattori
+    twoFactorAuth: 'Autenticazione a Due Fattori',
+    enter2FACode: 'Per favore inserisci il codice a 6 cifre dalla tua applicazione di autenticazione',
+    authCode: 'Codice di Autenticazione',
+    sixDigitCode: '000000',
+    verifying: 'Verificando...',
+    verify: 'Verifica',
+    twoFARequired: 'Autenticazione 2FA richiesta',
+    invalid2FACode: 'Codice 2FA non valido',
+    twoFAVerificationError: 'Errore di verifica 2FA',
+    loginSuccessful: 'Accesso riuscito!',
+    loginProcessingError: 'Errore nell\'elaborazione dell\'accesso',
+    
+    // Configurazione 2FA
+    twoFactorSetup: 'Configurazione Autenticazione a Due Fattori',
+    twoFactorDescription: 'Aggiungi un livello aggiuntivo di sicurezza al tuo account',
+    enableTwoFactor: 'Abilita Autenticazione a Due Fattori',
+    twoFactorBenefit: 'Proteggi il tuo account con un livello aggiuntivo di sicurezza',
+    generatingQRCode: 'Generazione Codice QR...',
+    setupInstructions: 'Istruzioni di Configurazione',
+    downloadAuthApp: 'Scarica un\'applicazione di autenticazione (Google Authenticator, Authy, ecc.)',
+    scanQRCode: 'Scansiona il codice QR con la tua applicazione di autenticazione',
+    enterVerificationCode: 'Inserisci il codice di verifica qui sotto',
+    qrCodeAlt: 'Codice QR per configurazione 2FA',
+    cantScanQR: 'Non riesci a scansionare il codice QR?',
+    showSecret: 'Mostra chiave di inserimento manuale',
+    hideSecret: 'Nascondi chiave di inserimento manuale',
+    copy: 'Copia',
+    copied: 'Copiato!',
+    verifySetup: 'Verifica Configurazione',
+    enterSixDigitCode: 'Inserisci codice a 6 cifre',
+    invalidCode: 'Codice di verifica non valido',
+    verificationError: 'Errore di verifica',
+    codeMustBe6Digits: 'Il codice deve contenere esattamente 6 cifre',
+    codeOnlyDigits: 'Il codice deve contenere solo cifre (0-9)',
+    twoFactorEnabled: 'Autenticazione a due fattori abilitata con successo!',
+    skipForNow: 'Salta per ora',
+    complete: 'Completa',
+    continue: 'Continua',
+    
+    // Messaggi di registrazione
+    username: 'Nome Utente',
+    signingUp: 'Registrando...',
+    registrationSuccessful: 'Registrazione riuscita!',
+    registrationError: 'Errore di registrazione',
+    allFieldsRequired: 'Tutti i campi sono obbligatori',
+    passwordsDoNotMatch: 'Le password non corrispondono',
+    passwordTooShort: 'La password deve contenere almeno 8 caratteri',
+    
     // Messages d'erreur
     invalidCredentials: 'Credenziali non valide',
     connectionError: 'Errore di connessione',
     signupError: 'Errore di registrazione',
     passwordMismatch: 'Le password non corrispondono',
+    tooManyAttempts: 'Troppi tentativi. Per favore riprova più tardi.',
+    serverError: 'Errore del server. Per favore riprova più tardi.',
     
     // Force du mot de passe
     passwordWeak: 'Debole',
@@ -479,103 +782,59 @@ const messages = {
     gamesPlayed: 'Partite Giocate',
     gamesWon: 'Partite Vinte',
     winRate: 'Tasso di Vittoria',
-    bestScore: 'Miglior Punteggio'
-  },
-  pt: {
-    // Navigation
-    gameTitle: 'Pong Bilhar',
-    home: 'Início',
-    play: 'Jogar',
-    profile: 'Perfil',
-    signIn: 'Entrar',
-    signUp: 'Cadastrar',
-    logout: 'Sair',
+    bestScore: 'Miglior Punteggio',
     
-    // Messages de navigation
-    redirectingToSignIn: 'Redirecionando para o login...',
-    redirectingToSignUp: 'Redirecionando para o cadastro...',
+    // Profil utilisateur détaillé
+    changeAvatar: 'Cambia Avatar',
+    rank: 'Rango',
+    enterUsername: 'Inserisci nome utente',
+    level: 'Livello',
+    pongRating: 'Classificazione Pong',
+    status: 'Stato',
+    online: 'Online',
+    memberSince: 'Membro dal',
+    title: 'Titolo',
+    saveProfile: 'Salva profilo',
     
-    // Page d'accueil
-    welcomeTitle: 'Bem-vindo ao Pong Bilhar',
-    gameDescription: 'Descubra o clássico jogo Pong com um toque de bilhar',
-    feature1Title: 'Gameplay Clássico',
-    feature1Description: 'Jogue contra uma IA inteligente',
-    feature2Title: 'Multijogador',
-    feature2Description: 'Jogue contra seus amigos',
-    feature3Title: 'Jogo Competitivo',
-    feature3Description: 'Participe de torneios',
+    // Statistiques Pong
+    pongStatistics: 'Statistiche Pong',
+    matchesPlayed: 'Partite giocate',
+    victories: 'Vittorie',
+    rating: 'Classificazione',
+    winRateEvolution: 'Evoluzione del tasso di vittoria',
+    pongSkills: 'Abilità Pong',
+    ballControl: 'Controllo palla',
+    defensivePlay: 'Gioco difensivo',
+    aggressivePlay: 'Gioco aggressivo',
+    reactionTime: 'Tempo di reazione',
+    accuracy: 'Precisione',
+    consistency: 'Coerenza',
     
-    // Boutons d'action
-    getStarted: 'Começar',
-    learnMore: 'Saiba mais',
-    startPlaying: 'Começar a jogar',
+    // Historique des matches
+    matchHistory: 'Cronologia partite',
+    opponent: 'Avversario',
+    duration: 'Durata',
+    result: 'Risultato',
+    win: 'Vittoria',
+    loss: 'Sconfitta',
+    points: 'Punti',
     
-    // Authentification
-    backToHome: 'Voltar ao Início',
-    signInTitle: 'Entrar',
-    signInSubtitle: 'Bem-vindo de volta ao Pong Bilhar',
-    signUpTitle: 'Cadastrar',
-    signUpSubtitle: 'Crie sua conta Pong Bilhar',
-    email: 'Email',
-    emailPlaceholder: 'Digite seu email',
-    password: 'Senha',
-    passwordPlaceholder: 'Digite sua senha',
-    firstName: 'Nome',
-    firstNamePlaceholder: 'Digite seu nome',
-    lastName: 'Sobrenome',
-    lastNamePlaceholder: 'Digite seu sobrenome',
-    confirmPassword: 'Confirmar Senha',
-    confirmPasswordPlaceholder: 'Confirme sua senha',
-    rememberMe: 'Lembrar de mim',
-    forgotPassword: 'Esqueceu a senha?',
-    signingIn: 'Entrando...',
-    creatingAccount: 'Criando conta...',
-    createAccount: 'Criar Conta',
-    orContinueWith: 'ou continue com',
-    googleSignIn: 'Entrar com Google',
-    googleSignUp: 'Cadastrar com Google',
-    noAccount: 'Não tem conta?',
-    alreadyHaveAccount: 'Já tem conta?',
-    acceptTerms: 'Aceito os',
-    termsOfService: 'Termos de Serviço',
-    and: 'e a',
-    privacyPolicy: 'Política de Privacidade',
+    // Activité quotidienne
+    dailyActivity: 'Attività giornaliera',
+    totalThisWeek: 'Totale questa settimana',
+    avgPerDay: 'Media al giorno',
+    bestDay: 'Miglior giornata',
     
-    // Messages d'erreur
-    invalidCredentials: 'Credenciais inválidas',
-    connectionError: 'Erro de conexão',
-    signupError: 'Erro de cadastro',
-    passwordMismatch: 'As senhas não coincidem',
+    // Boutons d'action profil
+    playGame: 'Gioca',
+    exportStats: 'Esporta statistiche',
     
-    // Force du mot de passe
-    passwordWeak: 'Fraca',
-    passwordMedium: 'Média',
-    passwordStrong: 'Forte',
+    // États de l'interface
+    loading: 'Loading',
+    current: 'Current',
     
-    // Messages non implémentés
-    googleSignInNotImplemented: 'Login com Google ainda não implementado',
-    googleSignUpNotImplemented: 'Cadastro com Google ainda não implementado',
-    forgotPasswordNotImplemented: 'Esqueci a senha ainda não implementado',
-    termsNotImplemented: 'Termos ainda não implementados',
-    privacyNotImplemented: 'Política de privacidade ainda não implementada',
-    
-    // Jeu
-    player1: 'Jogador 1',
-    player2: 'Jogador 2',
-    score: 'Pontuação',
-    gameOver: 'Fim de Jogo',
-    winner: 'Vencedor',
-    playAgain: 'Jogar Novamente',
-    pause: 'Pausar',
-    resume: 'Continuar',
-    
-    // Profil
-    profileTitle: 'Perfil',
-    statistics: 'Estatísticas',
-    gamesPlayed: 'Jogos Jogados',
-    gamesWon: 'Jogos Ganhos',
-    winRate: 'Taxa de Vitória',
-    bestScore: 'Melhor Pontuação'
+    // Boutons de jeu
+    playPong: 'Play Pong'
   }
 }
 

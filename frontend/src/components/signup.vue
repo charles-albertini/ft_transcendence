@@ -1,5 +1,14 @@
 <template>
-  <div class="signup-container">
+  <!-- Affichage du setup 2FA si activé -->
+  <TwoFactorSetup 
+    v-if="showTwoFactorSetup"
+    :user-token="userToken"
+    @setup-complete="handleTwoFactorComplete"
+    @setup-skipped="handleTwoFactorSkip"
+  />
+  
+  <!-- Page d'inscription normale -->
+  <div v-else class="signup-container">
     <!-- Header avec retour et langue -->
     <header class="header">
       <button @click="goBack" class="back-button">
@@ -14,6 +23,7 @@
           <option value="en">🇺🇸 English</option>
           <option value="fr">🇫🇷 Français</option>
           <option value="es">🇪🇸 Español</option>
+          <option value="it">🇮🇹 Italiano</option>
         </select>
       </div>
     </header>
@@ -173,12 +183,13 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composable/useAuths'
+import TwoFactorSetup from './TwoFactorSetup.vue'
 
 // Utilisation de vue-i18n
 const { t, locale } = useI18n()
 
 // Utilisation du composable d'authentification
-const { register } = useAuth()
+const { register, login } = useAuth()
 
 // Router
 const router = useRouter()
@@ -197,10 +208,12 @@ const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const passwordStrength = ref(0)
 const passwordFeedback = ref('')
+const showTwoFactorSetup = ref(false)
+const userToken = ref('')
 
 // Charger la langue préférée
 const savedLanguage = localStorage.getItem('preferred-language')
-if (savedLanguage && ['en', 'fr', 'es'].includes(savedLanguage)) {
+if (savedLanguage && ['en', 'fr', 'es', 'it'].includes(savedLanguage)) {
   locale.value = savedLanguage
 }
 
@@ -294,14 +307,37 @@ const handleSignUp = async () => {
       password: form.value.password
     })
     
-    console.log('Registration response:', response)
-    
     if (response.message === 'User created successfully') {
       successMessage.value = t('registrationSuccessful')
       
-      // Redirection après un court délai pour montrer le message de succès
+      // Récupérer le token depuis la réponse du backend
+      if (response.token || response.accessToken) {
+        userToken.value = response.token || response.accessToken
+      }
+      // Si pas de token, faire une connexion automatique
+      else {
+        try {
+          const loginResponse = await login({
+            email: form.value.email,
+            password: form.value.password
+          })
+          if (loginResponse.token || loginResponse.accessToken) {
+            userToken.value = loginResponse.token || loginResponse.accessToken
+          } else {
+            throw new Error('No token received from auto-login')
+          }
+        } catch (loginError) {
+          error.value = 'Inscription réussie. Veuillez vous connecter pour configurer la 2FA.'
+          setTimeout(() => {
+            router.push('/signin')
+          }, 2000)
+          return
+        }
+      }
+      
+      // Afficher le setup 2FA après un court délai
       setTimeout(() => {
-        router.push('/signin')
+        showTwoFactorSetup.value = true
       }, 1500)
     }
     
@@ -321,6 +357,14 @@ const goToSignIn = () => {
 
 const goBack = () => {
   router.push('/')
+}
+
+const handleTwoFactorComplete = (result) => {
+  router.push('/signin')
+}
+
+const handleTwoFactorSkip = () => {
+  router.push('/signin')
 }
 
 // Écouter les changements du mot de passe

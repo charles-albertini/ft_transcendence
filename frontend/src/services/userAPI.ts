@@ -46,28 +46,37 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   // API des statistiques utilisateur
   export const userApi = {
 	// Récupérer les informations utilisateur
-	getUser: async () => {
-	  return fetchWithAuth("/stats/user")
+	getUser: async (username?: string) => {
+		const currentUser = JSON.parse(localStorage.getItem("user_data") || '{}');
+		const usernameParam = username || currentUser.username;
+		if (!usernameParam) {
+			throw new Error("Nom d'utilisateur requis");
+		}
+		return fetchWithAuth(`/profile/user/${usernameParam}`)
 	},
-  
+
 	// Supprimer un utilisateur
 	deleteUser: async () => {
-	  return fetchWithAuth("/stats/delete", {
-		method: "DELETE",
-	  })
+		return fetchWithAuth("/profile/delete", {
+			method: "DELETE",
+		})
 	},
-  
+
 	// Mettre à jour les informations utilisateur
 	updateUser: async (userData: Record<string, any>) => {
-	  return fetchWithAuth("/stats/update", {
-		method: "PATCH",
-		body: JSON.stringify(userData),
-	  })
+		return fetchWithAuth("/profile/update", {
+			method: "PATCH",
+			body: JSON.stringify(userData),
+		})
 	},
-  
+
 	// Récupérer l'historique d'un utilisateur
-	getHistory: async (username: string) => {
-	  return fetchWithAuth(`/stats/history/${username}`)
-	},
-  }
-  
+	getHistory: async (username?: string) => {
+		const currentUser = JSON.parse(localStorage.getItem("user_data") || '{}');
+		const usernameParam = username || currentUser.username;
+		if (!usernameParam) {
+			throw new Error("Nom d'utilisateur requis");
+		}
+		return fetchWithAuth(`/profile/history/${usernameParam}`)
+	}
+}

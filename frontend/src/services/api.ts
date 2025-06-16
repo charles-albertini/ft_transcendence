@@ -26,7 +26,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 	  // Vérifier si la réponse est OK
 	  if (!response.ok) {
 		const errorData = await response.json().catch(() => ({}))
-		throw new Error(errorData.message || `Erreur ${response.status}: ${response.statusText}`)
+		throw new Error(errorData.error || errorData.message || `Erreur ${response.status}: ${response.statusText}`)
 	  }
 	  
 	  // Vérifier si la réponse est vide

@@ -15,7 +15,7 @@ export async function disable2FA(request: FastifyRequest, reply: FastifyReply) {
 			return reply.status(400).send({ error: '2FA is not enabled' });
 		}
 
-		await userRecord.update({ twoFA: false, twoFASecret: null });
+		await userRecord.update({ twoFA: false, twoFA_secret: null });
 		return reply.status(200).send({ message: '2FA has been disabled successfully' });
 	}
 	catch (error) {

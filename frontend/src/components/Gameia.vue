@@ -84,7 +84,7 @@
   
 	  <footer class="game-footer">
 		<div class="footer-container">
-		  <p>Utilisez votre souris ou les touches ↑/↓ pour déplacer la raquette</p>
+		  <p>Utilisez les touches W/S pour déplacer votre raquette</p>
 		  <p class="copyright">Amusez-vous bien !</p>
 		</div>
 	  </footer>
@@ -106,8 +106,6 @@
   
   // Keyboard state for smooth movement
   const keys = ref({
-	ArrowUp: false,
-	ArrowDown: false,
 	KeyW: false,
 	KeyS: false
   });
@@ -192,7 +190,6 @@
 	  } else {
 		ball.value.y = gameCanvas.value.height - ball.value.radius;
 	  }
-	  playSound('wall');
 	}
   
 	// Paddle collision detection
@@ -222,17 +219,14 @@
 		ball.value.x = paddle.x - ball.value.radius - 1;
 	  }
 	  
-	  playSound('paddle');
 	}
   
 	// Ball out of bounds (scoring)
 	if (ball.value.x - ball.value.radius < 0) {
 	  aiScore.value++;
-	  playSound('score');
 	  resetBall();
 	} else if (ball.value.x + ball.value.radius > gameCanvas.value.width) {
 	  playerScore.value++;
-	  playSound('score');
 	  resetBall();
 	}
   
@@ -376,8 +370,8 @@
   function handleKeyboardMovement() {
 	if (isPaused.value || gameOver.value) return;
 	
-	const upPressed = keys.value.ArrowUp || keys.value.KeyW;
-	const downPressed = keys.value.ArrowDown || keys.value.KeyS;
+	const upPressed = keys.value.KeyW;
+	const downPressed = keys.value.KeyS;
 	
 	if (upPressed && !downPressed) {
 	  player.value.y -= player.value.speed;
@@ -440,11 +434,7 @@
 	  gameCanvas.value.style.transformOrigin = 'top left';
 	}
   }
-  
-  function playSound(type) {
-	console.log(`Playing sound: ${type}`);
-  }
-  </script>
+</script>
   
   <style scoped>
   .game-container {
