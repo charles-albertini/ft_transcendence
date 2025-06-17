@@ -308,7 +308,7 @@
       }
 
       const goToFeature2 = () => {
-        router.push('/Gamemulti')
+        router.push('/multiplayer')
       }
 
       const goToFeature3 = () => {

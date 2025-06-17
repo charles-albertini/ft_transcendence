@@ -257,7 +257,7 @@
 			  📊 {{ $t('exportStats') }}
 			</button>
 			<router-link 
-			  to="/" 
+			  to="/Home2" 
 			  class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2"
 			>
 			  🏠 {{ $t('backToHome') }}
