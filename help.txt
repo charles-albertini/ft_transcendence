@@ -10,4 +10,3 @@ faire le premier a 5 (pour 2 et 4)
 mettre guest + num si joueur pas connecter
 mettre le score a coter du nom 
 
-quand on est connecter le multi renvoie directe sur deux joueur

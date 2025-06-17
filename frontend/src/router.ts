@@ -27,7 +27,7 @@ const routes = [
     component: Home2,
   },
   {
-    path: "/touramentgame",
+    path: "/tournamentgame",
     name: "tournamentgame",
     component: Tournamentgame,
   },

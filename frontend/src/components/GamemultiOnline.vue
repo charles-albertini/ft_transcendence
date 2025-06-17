@@ -297,8 +297,7 @@ function gameLoop() {
   updatePaddles();
   if (isHost) {
     updateBall();
-    // Envoie les mises à jour toutes les 3 frames pour éviter trop de messages
-    if (animationId % 3 === 0) {
+    if (animationId % 1 === 0) {
       sendMessage('game-update', {
         gameId,
         gameState: {
