@@ -11,6 +11,7 @@ CERT_FILES = $(CERT_KEY) $(CERT_CRT)
 all: up
 
 up: ${CERT_FILES}
+	cd frontend && npm install && npm run build
 	${DOCKER_CMD} -p ${NAME} -f ${DOCKER_PATH} up -d --build;
 
 down:
