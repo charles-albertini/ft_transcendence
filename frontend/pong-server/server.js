@@ -347,6 +347,10 @@ wss.on('connection', ws => {
         if (updateState.score) Object.assign(room.gameState.score, updateState.score);
         if (updateState.lastPaddleHit !== undefined) room.gameState.lastPaddleHit = updateState.lastPaddleHit;
         
+		if (updateState.gameOver !== undefined) {
+          room.gameState.gameOver = updateState.gameOver;
+         }
+
         broadcastToOthers(guId, ws, {
           type: 'game-update',
           payload: { gameState: updateState }
