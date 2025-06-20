@@ -161,7 +161,7 @@
   
       // Charger la langue préférée
       const savedLanguage = localStorage.getItem('preferred-language')
-      const initialLocale = savedLanguage && ['en', 'fr', 'es'].includes(savedLanguage) ? savedLanguage : null;
+      const initialLocale = savedLanguage && ['en', 'fr', 'es', 'it'].includes(savedLanguage) ? savedLanguage : null;
       if (initialLocale) {
         locale.value = initialLocale;
       }
@@ -233,12 +233,10 @@
   
       // Navigation
       const goToSignIn = () => {
-        console.log('Navigate to Sign In')
         window.location.assign('/signin')
       }
   
       const goToSignUp = () => {
-        console.log('Navigate to Sign Up')
         window.location.assign('/signup')
       }
   
@@ -270,24 +268,20 @@
   
       // Fonctions pour les boutons de fonctionnalités
       const goToFeature1 = () => {
-        console.log('Navigate to Feature 1 - Solo Game')
         window.location.assign('/Game')
       }
   
       const goToFeature2 = () => {
-        console.log('Navigate to Feature 2 - Multiplayer')
         // Feature 2 reste inchangée - accès direct au multijoueur
         window.location.assign('/multiplayer')
       }
   
       const goToFeature3 = () => {
-        console.log('Navigate to Feature 3 - Tournaments')
         window.location.assign('/tournamentplayer')
       }
 
       // Nouvelle Feature 4 pour le profil avec vérification d'authentification
       const goToFeature4 = () => {
-        console.log('Navigate to Feature 4 - Profile')
         // Vérifier si l'utilisateur est connecté avant d'accéder au profil
         if (isUserLoggedIn()) {
           window.location.assign('/profile')
@@ -618,58 +612,12 @@ html, body {
   padding: 0.5rem; /* Réduction de 2rem à 0.5rem */
   background: rgba(0, 0, 0, 0.3);
   color: #e0e0e0;
-  height: 40px; /* Hauteur fixe */
-}
+  height: 40px; /* Hauteur fixe */  }
   
   @keyframes float {
 	0%, 100% { transform: translateY(0px) rotate(0deg); }
 	50% { transform: translateY(-20px) rotate(180deg); }
   }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-  .main-title {
-    font-size: 2rem; /* Réduction pour mobile */
-  }
-  
-  .hero-section {
-    padding: 0.5rem 1rem; /* Réduction du padding mobile */
-    height: calc(100vh - 60px); /* Ajustement pour mobile */
-  }
-  
-	.main-title {
-	  font-size: 2.5rem;
-	}
-	
-	.pong-table-container {
-	  margin: 1.5rem 0;
-	}
-	
-	.pong-table {
-	  transform: scale(0.7); /* Réduction de 0.8 à 0.7 */
-	}
-	
-	.action-buttons {
-	  flex-direction: column;
-	  align-items: center;
-	}
-	
-	.header {
-	  flex-direction: column;
-	  gap: 1rem;
-	}
-  
-  .features-buttons {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem; /* Réduction pour mobile */
-    margin-top: 1rem;
-  }
-  
-  .feature-button {
-    padding: 1rem; /* Réduction pour mobile */
-    min-height: 140px; /* Réduction pour mobile */
-  }
-}
 
   /* Styles pour les 4 boutons de fonctionnalités */
   .features-buttons {
@@ -750,30 +698,7 @@ html, body {
     transition: all 0.3s ease;
   }
 
-  /* Responsive pour les boutons de fonctionnalités */
-  @media (max-width: 768px) {
-    .features-buttons {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
-    }
-    
-    .feature-button {
-      padding: 1rem;
-      min-height: 140px;
-    }
-  }
 
-  @media (max-width: 480px) {
-    .features-buttons {
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
-    }
-    
-    .feature-button {
-      padding: 1rem;
-      min-height: 120px; /* Réduction pour très petit écran */
-    }
-  }
 
   /* Styles pour le popup de connexion */
   .login-popup-overlay {
@@ -909,39 +834,6 @@ html, body {
     }
     60% {
       transform: translateY(-5px);
-    }
-  }
-
-  @media (max-width: 480px) {
-    .popup-buttons {
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-    
-    .popup-btn {
-      width: 100%;
-    }
-    
-    .popup-content {
-      padding: 1.5rem;
-    }
-    
-    .popup-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-    
-    .popup-content p {
-      font-size: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .popup-features {
-      gap: 0.75rem;
-    }
-
-    .popup-feature {
-      padding: 0.5rem;
     }
   }
   </style>

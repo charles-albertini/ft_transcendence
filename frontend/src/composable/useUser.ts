@@ -8,7 +8,6 @@ const error = ref("")
 
 export function useUser() {
   const isLoading = computed(() => loading.value)
-  const hasError = computed(() => !!error.value)
 
   // Récupérer les informations utilisateur
   const fetchUser = async () => {
@@ -65,41 +64,16 @@ export function useUser() {
     }
   }
 
-  // Récupérer l'historique d'un utilisateur
-  const fetchHistory = async (username: string) => {
-    loading.value = true
-    error.value = ""
-
-    try {
-      const history = await userApi.getHistory(username)
-      userHistory.value = history
-      return history
-    } catch (err: any) {
-      error.value = err.message || "Erreur lors de la récupération de l'historique"
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // Réinitialiser les erreurs
-  const clearError = () => {
-    error.value = ""
-  }
-
   return {
     // État
     user: computed(() => user.value),
     userHistory: computed(() => userHistory.value),
     isLoading,
     error: computed(() => error.value),
-    hasError,
 
     // Actions
     fetchUser,
     updateUser,
     deleteUser,
-    fetchHistory,
-    clearError,
   }
 }

@@ -47,11 +47,17 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composable/useAuths';
 
 const router = useRouter();
+const { isAuthenticated } = useAuth();
 
 function goHome() {
-  router.push({ name: 'Home' });
+  if (isAuthenticated.value) {
+    router.push({ name: 'Home2' });
+  } else {
+    router.push({ name: 'Home' });
+  }
 }
 
 function goOnline() {
@@ -309,76 +315,6 @@ function goLocal() {
 .mode-button:hover .button-arrow {
   transform: translateX(5px);
   opacity: 1;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .hub-container {
-    padding: 1rem;
-    min-height: 100vh;
-  }
-  
-  .back-button {
-    top: 1rem;
-    left: 1rem;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
-  }
-  
-  .main-title {
-    font-size: 2.5rem;
-  }
-  
-  .title-container {
-    padding: 1.5rem 2rem;
-  }
-  
-  .game-modes {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .mode-card {
-    padding: 2rem;
-  }
-  
-  .mode-icon {
-    font-size: 3rem;
-  }
-  
-  .mode-title {
-    font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .back-button {
-    top: 0.5rem;
-    left: 0.5rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-  }
-  
-  .main-title {
-    font-size: 2rem;
-  }
-  
-  .subtitle {
-    font-size: 1rem;
-  }
-  
-  .mode-card {
-    padding: 1.5rem;
-  }
-  
-  .mode-features {
-    gap: 0.5rem;
-  }
-  
-  .feature-tag {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.6rem;
-  }
 }
 </style>
 message.txt

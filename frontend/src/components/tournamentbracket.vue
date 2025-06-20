@@ -253,9 +253,8 @@
   
   <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-  import { useRoute } from 'vue-router'
+    import { useRoute } from 'vue-router'
   
-//   const router = useRouter()
   const route = useRoute()
   
   interface Team {
@@ -370,7 +369,6 @@
 		  return true
 		}
 	  } catch (e) {
-		console.error('Erreur lors du chargement de l\'état du tournoi:', e)
 		localStorage.removeItem('tournament_state')
 	  }
 	}
@@ -424,7 +422,6 @@
 		  localStorage.removeItem('tournamentMatchResult')
 		}
 	  } catch (e) {
-		console.error('Erreur lors de la lecture du résultat:', e)
 		localStorage.removeItem('tournamentMatchResult')
 	  }
 	}
@@ -1356,88 +1353,5 @@
 
 .dismiss-btn:hover {
   background: rgba(255, 255, 255, 0.2);
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .bracket-container {
-    gap: 1rem;
-    padding: 1rem;
-  }
-  
-  .bracket-side {
-    gap: 1rem;
-  }
-  
-  .team {
-    min-width: 120px;
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-  }
-  
-  .tournament-title {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .tournament-container {
-    padding: 0.5rem;
-  }
-  
-  .tournament-header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-  }
-  
-  .bracket-container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    text-align: center;
-  }
-  
-  .bracket-side {
-    justify-content: center;
-  }
-  
-  .round-1, .round-2 {
-    min-height: auto;
-  }
-  
-  .match-result-notification {
-    top: 1rem;
-    right: 1rem;
-    left: 1rem;
-  }
-  
-  .notification-content {
-    max-width: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .tournament-title {
-    font-size: 1.5rem;
-  }
-  
-  .final-title {
-    font-size: 1.2rem;
-  }
-  
-  .champion-name {
-    font-size: 1.2rem;
-  }
-  
-  .team {
-    min-width: 100px;
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
-  }
-  
-  .play-pong-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
-  }
 }
 </style>

@@ -445,6 +445,7 @@ input:checked + .slider:before {
 }
 
 .secret-section {
+color: #ef4444;
   margin-bottom: 2rem;
   padding: 1rem;
   background: #f9fafb;

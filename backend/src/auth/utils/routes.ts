@@ -6,7 +6,7 @@ import { enable2FA } from '../routes_def/enable2FA';
 import { check2FA } from '../routes_def/check2FA';
 import { disable2FA } from '../routes_def/disable2FA';
 import { refreshToken } from '../routes_def/refreshToken';
-import { initiateGoogleAuth, googleCallback } from '../routes_def/google_auth';
+import { googleCallback } from '../routes_def/google_auth';
 
 export default fp(async function routes_auth(fastify: any) {
 	fastify.post('/auth', sign_in);
@@ -15,6 +15,7 @@ export default fp(async function routes_auth(fastify: any) {
 	fastify.get('/auth/enable2FA', { preHandler: fastify.authenticate }, enable2FA);
 	fastify.post('/auth/check2FA', { preHandler: fastify.authenticate }, check2FA);
 	fastify.post('/auth/disable2FA', { preHandler: fastify.authenticate }, disable2FA);
-	fastify.get('/auth/google', initiateGoogleAuth);
+    
+    // Route Google OAuth callback uniquement (la route /api/auth/google est créée automatiquement par le plugin)
     fastify.get('/auth/google/callback', googleCallback);
 });

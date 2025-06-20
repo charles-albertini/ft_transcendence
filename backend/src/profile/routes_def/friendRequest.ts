@@ -46,7 +46,7 @@ export async function friendrequest(request: FastifyRequest<{Params: { username 
 			}
 		}
 
-		const NewFriendship = Friendship.create({
+		const NewFriendship = await Friendship.create({
 			user_id1: receiver.user_id,
 			user_id2: senderId,
 			status: 'pending'

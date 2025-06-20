@@ -31,35 +31,6 @@
       </div>
     </header>
 
-    <!-- Match Info -->
-    <div class="match-info">
-      <div class="player-info left">
-        <div class="player-avatar">{{ player1Name.charAt(0).toUpperCase() }}</div>
-        <div class="player-details">
-          <h3 class="player-name">{{ player1Name }}</h3>
-          <div class="player-score">{{ player1Score }}</div>
-        </div>
-      </div>
-      
-      <div class="vs-section">
-        <div class="vs-text">VS</div>
-        <div class="match-status">
-          <span v-if="!gameStarted">Appuyez sur ESPACE pour commencer</span>
-          <span v-else-if="isPaused">PAUSE</span>
-          <span v-else-if="gameOver">MATCH TERMINÉ</span>
-          <span v-else>EN COURS</span>
-        </div>
-      </div>
-      
-      <div class="player-info right">
-        <div class="player-details">
-          <h3 class="player-name">{{ player2Name }}</h3>
-          <div class="player-score">{{ player2Score }}</div>
-        </div>
-        <div class="player-avatar">{{ player2Name.charAt(0).toUpperCase() }}</div>
-      </div>
-    </div>
-
     <main class="game-main">
       <div class="game-area" ref="gameContainer">
         <!-- Game table -->
@@ -255,12 +226,10 @@ function initializeCanvas() {
       handleResize()
       startGameLoop()
     } else {
-      console.error('Failed to get canvas context, retrying...')
       // Retry après un délai si l'initialisation échoue
       setTimeout(initializeCanvas, 300)
     }
   } else {
-    console.error('Canvas element not found, retrying...')
     // Retry après un délai si l'élément n'est pas trouvé
     setTimeout(initializeCanvas, 300)
   }
@@ -373,7 +342,6 @@ function checkImprovedPaddleCollision(paddle: typeof player1.value) {
 
 function drawGame() {
   if (!ctx.value || !gameCanvas.value) {
-    console.warn('Canvas context or canvas element not available')
     return
   }
 
@@ -448,7 +416,7 @@ function drawGame() {
     ctx.value.fillText(player1Name.value, gameCanvas.value.width * 0.25, 55)
     ctx.value.fillText(player2Name.value, gameCanvas.value.width * 0.75, 55)
   } catch (error) {
-    console.error('Error in drawGame:', error)
+    // Error in drawGame
   }
 }
 
@@ -660,80 +628,6 @@ function handleResize() {
 .score-value {
   color: #d4af37;
   font-size: 1.1rem;
-}
-
-.match-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 2rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-}
-
-.player-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.player-info.right {
-  flex-direction: row-reverse;
-}
-
-.player-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #d4af37;
-  color: #1a472a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: bold;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-}
-
-.player-details {
-  text-align: center;
-}
-
-.player-info.right .player-details {
-  text-align: center;
-}
-
-.player-name {
-  color: #d4af37;
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin: 0 0 0.5rem 0;
-}
-
-.player-score {
-  color: white;
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-.vs-section {
-  text-align: center;
-}
-
-.vs-text {
-  color: #d4af37;
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-.match-status {
-  color: #bbf7d0;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
 }
 
 .btn {
@@ -1025,74 +919,6 @@ function handleResize() {
   }
   60% {
     transform: translateY(-5px);
-  }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .game-header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-  }
-  
-  .header-container {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .header-controls {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .match-info {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .controls-info {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .pong-table {
-    transform: scale(0.8);
-  }
-  
-  .overlay-title {
-    font-size: 2rem;
-  }
-  
-  .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-  }
-  
-  .game-over-actions {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 480px) {
-  .game-main {
-    padding: 1rem;
-  }
-  
-  .pong-table {
-    transform: scale(0.7);
-  }
-  
-  .overlay-title {
-    font-size: 1.5rem;
-  }
-  
-  .final-score {
-    font-size: 1.5rem;
-  }
-  
-  .player-score {
-    font-size: 1.5rem;
   }
 }
 </style>

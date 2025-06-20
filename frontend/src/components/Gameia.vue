@@ -7,10 +7,12 @@
 			<span class="brand-text">Pong Billard</span>
 		  </div>
 		  <div class="header-controls">
-			<div class="score-display">
-			  <span class="score-label">Score:</span>
-			  <span class="score-value">{{ playerScore }} - {{ aiScore }}</span>
-			</div>
+			<button @click="goHome" class="btn btn-secondary">
+			  <svg class="btn-icon" fill="currentColor" viewBox="0 0 20 20">
+				<path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+			  </svg>
+			  Accueil
+			</button>
 			<button @click="resetGame" class="btn btn-primary">
 			  <svg class="btn-icon" fill="currentColor" viewBox="0 0 20 20">
 				<path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
@@ -38,7 +40,7 @@
 				width="800" 
 				height="400" 
 				class="game-canvas"
-				@touchmove="handleTouchMove"
+
 			  ></canvas>
 			</div>
 		  </div>
@@ -93,6 +95,12 @@
   
   <script setup>
   import { ref, onMounted, onUnmounted, watch } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { useAuth } from '../composable/useAuths';
+  
+  // Router et auth
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   
   // Game state
   const gameCanvas = ref(null);
@@ -409,21 +417,7 @@
   }
   
 
-  function handleTouchMove(e) {
-	if (isPaused.value || gameOver.value) return;
-	e.preventDefault();
-	
-	const rect = gameCanvas.value.getBoundingClientRect();
-	const touchY = e.touches[0].clientY - rect.top;
-	
-	player.value.y = touchY;
-	
-	if (player.value.y - player.value.height / 2 < 0) {
-	  player.value.y = player.value.height / 2;
-	} else if (player.value.y + player.value.height / 2 > gameCanvas.value.height) {
-	  player.value.y = gameCanvas.value.height - player.value.height / 2;
-	}
-  }
+
   
   function handleResize() {
 	if (gameContainer.value && gameCanvas.value) {
@@ -433,6 +427,15 @@
 	  gameCanvas.value.style.transform = `scale(${scale})`;
 	  gameCanvas.value.style.transformOrigin = 'top left';
 	}
+  }
+  
+  // Fonction pour retourner à l'accueil
+  function goHome() {
+    if (isAuthenticated.value) {
+      router.push('/Home2');
+    } else {
+      router.push('/');
+    }
   }
 </script>
   
@@ -481,25 +484,6 @@
 	display: flex;
 	align-items: center;
 	gap: 1.5rem;
-  }
-  
-  .score-display {
-	padding: 0.5rem 1rem;
-	background: rgba(212, 175, 55, 0.1);
-	border: 1px solid rgba(212, 175, 55, 0.3);
-	border-radius: 0.5rem;
-	color: #d4af37;
-	font-weight: 600;
-  }
-  
-  .score-label {
-	color: #e0e0e0;
-	margin-right: 0.5rem;
-  }
-  
-  .score-value {
-	color: #d4af37;
-	font-size: 1.1rem;
   }
   
   .btn {
@@ -697,53 +681,5 @@
 	50% { transform: translateY(-20px) rotate(180deg); }
   }
   
-  /* Responsive */
-  @media (max-width: 768px) {
-	.game-header {
-	  flex-direction: column;
-	  gap: 1rem;
-	  padding: 1rem;
-	}
-	
-	.header-container {
-	  flex-direction: column;
-	  gap: 1rem;
-	}
-	
-	.header-controls {
-	  flex-direction: column;
-	  gap: 0.5rem;
-	}
-	
-	.pong-table {
-	  transform: scale(0.8);
-	}
-	
-	.overlay-title {
-	  font-size: 2rem;
-	}
-	
-	.btn {
-	  padding: 0.5rem 1rem;
-	  font-size: 0.8rem;
-	}
-  }
-  
-  @media (max-width: 480px) {
-	.game-main {
-	  padding: 1rem;
-	}
-	
-	.pong-table {
-	  transform: scale(0.7);
-	}
-	
-	.overlay-title {
-	  font-size: 1.5rem;
-	}
-	
-	.final-score {
-	  font-size: 1.5rem;
-	}
-  }
+
   </style>

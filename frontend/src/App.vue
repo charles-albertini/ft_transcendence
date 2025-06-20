@@ -170,21 +170,4 @@
   .min-h-screen {
 	min-height: 100vh;
   }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-	.main-nav .container {
-	  flex-direction: column;
-	  gap: 1rem;
-	}
-	
-	.main-nav .flex {
-	  flex-wrap: wrap;
-	  justify-content: center;
-	}
-	
-	.language-switcher {
-	  margin-left: 0;
-	}
-  }
   </style>

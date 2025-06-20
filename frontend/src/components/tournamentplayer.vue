@@ -81,8 +81,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '../composable/useAuths'
 
 const router = useRouter()
+const { isAuthenticated } = useAuth()
 
 // État de configuration
 const playerNames = ref<string[]>(Array(8).fill(''))
@@ -118,7 +120,11 @@ const clearNames = () => {
 }
 
 const goHome = () => {
-  router.push('/')
+  if (isAuthenticated.value) {
+    router.push('/home2')
+  } else {
+    router.push('/')
+  }
 }
 
 const startTournament = () => {
@@ -395,68 +401,5 @@ const startTournament = () => {
   color: #bbf7d0;
   margin: 0.5rem 0;
   font-size: 1.1rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .tournament-container {
-    padding: 1rem;
-  }
-  
-  .tournament-title {
-    font-size: 2rem;
-  }
-  
-  .tournament-header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .back-home-button {
-    position: static;
-    transform: none;
-    align-self: flex-start;
-  }
-  
-  .back-home-button:hover {
-    transform: translateY(-2px);
-  }
-  
-  .main-content {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .right-panel {
-    flex: none;
-  }
-  
-  .players-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .button-group {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .default-names-btn, .clear-names-btn, .start-tournament-btn {
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  .setup-section {
-    padding: 1rem;
-  }
-  
-  .instructions {
-    padding: 1rem;
-  }
-  
-  .validation-status {
-    padding: 1rem;
-  }
 }
 </style>

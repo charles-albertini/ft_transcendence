@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { JWTpayload } from '../../interfaces';
 import { User } from '../../db_models/user_model';
 
-export async function refreshToken(request: FastifyRequest<{Body: { refreshtoken: string } }>, reply: FastifyReply) {
+export async function refreshToken(request: FastifyRequest, reply: FastifyReply) {
 	try {
 		const decoded = request.user as JWTpayload;
     	const user = await User.findByPk(decoded.user_id);
@@ -10,7 +10,7 @@ export async function refreshToken(request: FastifyRequest<{Body: { refreshtoken
     	    return reply.status(400).send({ error: 'User no longer exists' });
     	}
 
-		const newToken = await reply.jwtSign({ email_adress: decoded.email_adress, user_id: decoded.user_id }, { expiresIn: '15min' });
+		const newToken = await reply.jwtSign({ username: user.username, user_id: decoded.user_id }, { expiresIn: '15min' });
 		if (!newToken) {
 			return reply.status(500).send({ error: 'Failed to generate new token' });
 		}
@@ -19,6 +19,6 @@ export async function refreshToken(request: FastifyRequest<{Body: { refreshtoken
 	}
 	catch (error) {
 		console.error('Error refreshing token:', error);
-		return reply.status(401).send({ error: 'Invalid or expired refresh token' });
+		return reply.status(403).send({ error: 'Invalid or expired refresh token' });
 	}
 }

@@ -17,18 +17,8 @@
 		  <div class="profile-container bg-black/40 backdrop-blur-sm p-8 rounded-xl border border-yellow-500/30 shadow-2xl">
 			<div class="avatar-section">
 			  <div class="avatar-wrapper">
-				<img :src="avatar" alt="Avatar" class="avatar" />
-				<div class="level-badge">
-				  <BillardBall :number="level" :size="32" />
-				</div>
-				<div class="pong-indicator">
-				  <div class="paddle"></div>
-				  <div class="ball"></div>
-				</div>
+				<img :src="displayAvatar" alt="Avatar" class="avatar" />
 			  </div>
-			  <button @click="changeAvatar" class="btn mt-4">
-				{{ $t('changeAvatar') }}
-			  </button>
 			  <div class="player-rank">
 				<span class="rank-label">{{ $t('rank') }}</span>
 				<span class="rank-value">{{ playerRank }}</span>
@@ -82,31 +72,58 @@
 				<span class="label">{{ $t('title') }}:</span>
 				<span class="value title-badge">{{ playerTitle }}</span>
 			  </div>
+
+			  <div class="info-row">
+				<span class="label">{{ $t('security') || 'Sécurité' }}:</span>
+				<span class="value security-status" :class="{ 'secure': twoFactorEnabled }">
+				  {{ twoFactorEnabled ? '🔒 2FA Activée' : '🔓 2FA Désactivée' }}
+				</span>
+			  </div>
 			</div>
 		  </div>
+
+		  <!-- Composant pour l'édition du profil -->
+		  <!-- Debug: showEditProfile = {{ showEditProfile }} -->
+		  <div v-if="showEditProfile" style="color: red; text-align: center; padding: 10px; background: rgba(255,0,0,0.1);">
+			DEBUG: Modal devrait être visible (showEditProfile = {{ showEditProfile }})
+		  </div>
+		  <EditProfileModal 
+			:show="showEditProfile"
+			:userProfile="editProfileData"
+			@close="closeEditProfile"
+			@profile-updated="handleProfileUpdated"
+		  />
 		  
 		  <!-- Statistiques Pong -->
 		  <div class="stats mt-10">
-			<h2 class="text-3xl font-bold text-white mb-8 text-center flex items-center justify-center gap-3">
+			<h2 class="text-3xl font-bold text-white mb-4 text-center flex items-center justify-center gap-3">
 			  {{ $t('pongStatistics') }}
 			</h2>
+			
+			<!-- Indicateur pour les matchs en ligne uniquement -->
+			<div class="online-only-indicator mb-6 text-center">
+			  <div class="inline-flex items-center gap-2 bg-blue-600/20 border border-blue-400/50 rounded-lg px-4 py-2">
+				<span class="text-blue-300 text-lg">🌐</span>
+				<span class="text-blue-100 font-medium">Statistiques des matchs en ligne uniquement</span>
+			  </div>
+			</div>
 			
 			<!-- Statistiques principales -->
 			<div class="stats-grid mb-8">
 			  <div class="stat-card">
-				<div class="stat-icon">🎮</div>
-				<h3>{{ $t('matchesPlayed') }}</h3>
+				<div class="stat-icon">🌐</div>
+				<h3>{{ $t('matchesPlayed') }} (En ligne)</h3>
 				<div class="stat-value">{{ pongStats.matchesPlayed }}</div>
 			  </div>
 			  <div class="stat-card">
 				<div class="stat-icon">🏆</div>
-				<h3>{{ $t('victories') }}</h3>
+				<h3>{{ $t('victories') }} (En ligne)</h3>
 				<div class="stat-value">{{ pongStats.victories }}</div>
 				<div class="stat-subtitle">{{ pongStats.matchesPlayed - pongStats.victories }} défaites</div>
 			  </div>
 			  <div class="stat-card">
 				<div class="stat-icon">📊</div>
-				<h3>{{ $t('winRate') }}</h3>
+				<h3>{{ $t('winRate') }} (En ligne)</h3>
 				<div class="stat-value">{{ winRatePercentage }}%</div>
 			  </div>
 			  <div class="stat-card">
@@ -120,7 +137,7 @@
 			<div class="charts-section">
 			  <!-- Historique des matches détaillé -->
 			  <div class="chart-container match-history-extended">
-				<h3 class="chart-title">📋 {{ $t('matchHistory') }}</h3>
+				<h3 class="chart-title">🌐 {{ $t('matchHistory') }} (Matchs en ligne)</h3>
 				<div class="history-list" v-if="pongMatchHistory.length > 0">
 				  <div 
 					v-for="match in pongMatchHistory" 
@@ -156,21 +173,15 @@
 				</div>
 				<!-- Message quand aucun historique -->
 				<div v-else class="no-history">
-				  <div class="no-history-icon">🎮</div>
-				  <h4 class="no-history-title">Aucun match joué</h4>
-				  <p class="no-history-text">Commencez à jouer pour voir votre historique !</p>
-				  <router-link 
-					to="/game" 
-					class="btn-play-now"
-				  >
-					🏓 Jouer maintenant
-				  </router-link>
+				  <div class="no-history-icon">🌐</div>
+				  <h4 class="no-history-title">Aucun match en ligne joué</h4>
+				  <p class="no-history-text">Commencez à jouer en ligne pour voir votre historique !</p>
 				</div>
 			  </div>
 
 			  <!-- Diagramme d'évolution du Winrate -->
 			  <div class="chart-container">
-				<h3 class="chart-title">{{ $t('winrateEvolution') }}</h3>
+				<h3 class="chart-title">{{ $t('winrateEvolution') }} (Matchs en ligne)</h3>
 				<div class="winrate-chart">
 				  <div class="chart-area">
 					<svg class="winrate-svg" viewBox="0 0 400 200">
@@ -244,17 +255,11 @@
 
 		  <!-- Boutons d'action -->
 		  <div class="flex justify-center gap-4 mt-8">
-			<router-link 
-			  to="/game" 
-			  class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2"
-			>
-			  🏓 {{ $t('playPong') }}
-			</router-link>
 			<button 
-			  @click="exportStats" 
+			  @click="openEditProfile" 
 			  class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2"
 			>
-			  📊 {{ $t('exportStats') }}
+			  ⚙️ {{ $t('editProfile') || 'Modifier le profil' }}
 			</button>
 			<router-link 
 			  to="/Home2" 
@@ -271,21 +276,22 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import BillardBall from './BillardBall.vue'
 import { useAuth } from '../composable/useAuths';
 import { useUser } from '../composable/useUser';
 import { useRouter } from 'vue-router';
 import { userApi } from '../services/userAPI.ts';
+import { DEFAULT_AVATARS_BASE64 } from '../utils/imageUtils.ts';
+import EditProfileModal from './EditProfileModal.vue';
 
 const { t } = useI18n()
-const { user: currentUser, isAuthenticated } = useAuth();
-const { fetchUser, fetchHistory, isLoading, error } = useUser();
+const { user: currentUser, isAuthenticated, initializeAuth } = useAuth();
+const { fetchUser, isLoading, error } = useUser();
 const router = useRouter();
 
 // État local avec la Composition API
 const username = ref('')
 const level = ref(1)
-const avatar = ref('https://via.placeholder.com/150x150/d4af37/000000?text=🏓')
+const avatar = ref(DEFAULT_AVATARS_BASE64.default) // Utilise l'avatar par défaut en base64
 const memberSince = ref(new Date())
 
 // Données backend réelles
@@ -307,6 +313,9 @@ const pongStats = ref({
   totalPlayTime: 0
 })
 
+// État de la 2FA (lecture seule pour l'affichage)
+const twoFactorEnabled = ref(false)
+
 // Computed properties
 const winRatePercentage = computed(() => {
   return pongStats.value.matchesPlayed > 0 ? Math.round((pongStats.value.victories / pongStats.value.matchesPlayed) * 100) : 0
@@ -314,7 +323,7 @@ const winRatePercentage = computed(() => {
 
 const levelProgress = computed(() => {
   const baseMatches = (level.value - 1) * 10
-  const currentMatches = pongStats.value.matchesPlayed
+  const currentMatches = pongStats.value.matchesPlayed // Nombre de matchs en ligne seulement
   const progressInLevel = currentMatches - baseMatches
   return Math.min((progressInLevel / 10) * 100, 100)
 })
@@ -322,10 +331,10 @@ const levelProgress = computed(() => {
 const experienceText = computed(() => {
   const nextLevel = level.value + 1
   const baseMatches = (level.value - 1) * 10
-  const currentMatches = pongStats.value.matchesPlayed
+  const currentMatches = pongStats.value.matchesPlayed // Nombre de matchs en ligne seulement
   const progressInLevel = currentMatches - baseMatches
   const remaining = 10 - progressInLevel
-  return `${remaining} matches vers niveau ${nextLevel}`
+  return `${remaining} matchs en ligne vers niveau ${nextLevel}`
 })
 
 const playerTitle = computed(() => {
@@ -352,7 +361,23 @@ const ratingStars = computed(() => {
   return Math.floor(pongStats.value.rating / 400) + 1
 })
 
-// Données d'évolution du winrate (calculées à partir des vraies données)
+// Computed pour l'avatar avec fallback
+const displayAvatar = computed(() => {
+  return avatar.value || DEFAULT_AVATAR
+})
+
+// Computed pour détecter si l'avatar actuel est personnalisé (non-défaut)
+const isCustomAvatar = computed(() => {
+  const currentAvatar = avatar.value
+  return currentAvatar && 
+         currentAvatar !== DEFAULT_AVATAR && 
+         !Object.values(DEFAULT_AVATARS_BASE64).includes(currentAvatar)
+})
+
+// URL de l'avatar par défaut (même que le backend)
+const DEFAULT_AVATAR = DEFAULT_AVATARS_BASE64.default
+
+// Données d' évolution du winrate (calculées à partir des vraies données)
 const winrateHistory = ref([
   { date: new Date(), winrate: 50 }
 ])
@@ -360,39 +385,49 @@ const winrateHistory = ref([
 // Historique des matches (formaté pour l'affichage)
 const pongMatchHistory = ref([])
 
+// Variables pour l'édition du profil (simplifiées pour le composant)
+const showEditProfile = ref(false)
+
+// Computed pour l'interface avec EditProfileModal
+const editProfileData = computed(() => {
+  return {
+    username: username.value,
+    twoFA: userProfile.value?.twoFA || false,
+    avatar: avatar.value || DEFAULT_AVATAR,
+    google_user: userProfile.value?.google_user || false
+  }
+})
+
 // Fonction pour charger les données utilisateur depuis le backend
 const loadUserData = async () => {
   try {
-    console.log('Starting loadUserData...')
     isLoadingData.value = true
     
     // Récupérer les informations du profil utilisateur
-    console.log('Fetching user data...')
     const userInfo = await fetchUser()
-    console.log('User info received:', userInfo)
     userProfile.value = userInfo
     
     // Mise à jour des données de base
     username.value = userInfo.username || ''
     memberSince.value = new Date(userInfo.created_at) || new Date()
-    avatar.value = userInfo.avatar || 'https://via.placeholder.com/150x150/d4af37/000000?text=🏓'
+    avatar.value = userInfo.avatar || DEFAULT_AVATAR // Utilise l'avatar par défaut si null en DB
     
-    // Calcul des statistiques à partir des vraies données
-    pongStats.value.matchesPlayed = userInfo.number_of_matches || 0
-    pongStats.value.victories = userInfo.number_of_win || 0
+    // Mise à jour de l'état 2FA
+    twoFactorEnabled.value = userInfo.twoFA || false
     
-    // Calcul du niveau basé sur le nombre de matches
-    level.value = Math.floor((userInfo.number_of_matches || 0) / 10) + 1
+    // Calcul des statistiques à partir des vraies données (sera mise à jour par processMatchHistory)
+    pongStats.value.matchesPlayed = 0 // Sera calculé avec les matchs en ligne seulement
+    pongStats.value.victories = 0     // Sera calculé avec les matchs en ligne seulement
     
-    // Calcul du rating basé sur le ratio
+    // Calcul du niveau basé sur le nombre de matches en ligne
+    // level.value sera recalculé après avoir filtré les matchs en ligne
+    
+    // Calcul du rating basé sur le ratio des matchs en ligne
     const ratio = userInfo.ratio || 0
     pongStats.value.rating = Math.round(1000 + (ratio * 800))
     
-    console.log('Stats calculated:', pongStats.value)
-    
     // Récupérer l'historique des matches depuis le serveur
     try {
-      console.log('Fetching match history from server...')
       const history = await userApi.getHistory(userInfo.username)
       if (history && history.matches) {
         matchHistory.value = history.matches
@@ -400,30 +435,42 @@ const loadUserData = async () => {
         processMatchHistory(history.matches)
       }
     } catch (historyError) {
-      console.log('Aucun historique de matches trouvé:', historyError)
+      // Utiliser des données par défaut si pas d'historique
       // Utiliser des données par défaut si pas d'historique
       generateDefaultData()
     }
     
-    console.log('User data loaded successfully')
-    
   } catch (err) {
-    console.error('Erreur lors du chargement des données utilisateur:', err)
     // Utiliser des données par défaut en cas d'erreur
     generateDefaultData()
   } finally {
-    console.log('Setting isLoadingData to false')
     isLoadingData.value = false
   }
 }
 
-// Fonction pour traiter l'historique et générer les données des graphiques
 const processMatchHistory = (matches) => {
-  // Calculer les données de winrate au fil du temps
+  // Filtrer uniquement les matchs en ligne (exclure les matchs contre l'IA)
+  const onlineMatches = matches.filter(match => 
+    match.opponents && 
+    match.opponents.length > 0 && 
+    match.opponents[0]?.username && 
+    match.opponents[0]?.username !== 'IA' &&
+    match.opponents[0]?.username.toLowerCase() !== 'ia' &&
+    match.opponents[0]?.username.toLowerCase() !== 'bot'
+  )
+  
+  // Mettre à jour les statistiques pour ne compter que les matchs en ligne
+  pongStats.value.matchesPlayed = onlineMatches.length
+  pongStats.value.victories = onlineMatches.filter(match => match.i_won).length
+  
+  // Recalculer le niveau basé sur les matchs en ligne seulement
+  level.value = Math.floor(onlineMatches.length / 10) + 1
+  
+  // Calculer les données de winrate au fil du temps (seulement matchs en ligne)
   let wins = 0
   const winrateData = []
   
-  matches.slice(-10).forEach((match, index) => {
+  onlineMatches.slice(-10).forEach((match, index) => {
     if (match.i_won) wins++
     const winrate = Math.round((wins / (index + 1)) * 100)
     winrateData.push({
@@ -437,9 +484,7 @@ const processMatchHistory = (matches) => {
   ]
   
   // Adapter l'historique des matches pour l'affichage (seulement matches en ligne)
-  pongMatchHistory.value = matches.slice(0, 10)
-    .filter(match => match.opponents[0]?.username !== 'IA') // Exclure les matches contre l'IA
-    .map((match, index) => ({
+  pongMatchHistory.value = onlineMatches.slice(0, 10).map((match, index) => ({
     id: index + 1,
     playerScore: match.my_score,
     opponentScore: match.opponents[0]?.score || 0,
@@ -452,9 +497,14 @@ const processMatchHistory = (matches) => {
   }))
 }
 
-// Générer des données par défaut
+// Générer des données par défaut (pas de matchs en ligne)
 const generateDefaultData = () => {
-  const currentWinRate = pongStats.value.matchesPlayed > 0 ? Math.round((pongStats.value.victories / pongStats.value.matchesPlayed) * 100) : 0
+  // Réinitialiser les statistiques pour les matchs en ligne seulement
+  pongStats.value.matchesPlayed = 0
+  pongStats.value.victories = 0
+  level.value = 1 // Niveau 1 si aucun match en ligne
+  
+  const currentWinRate = 0 // Pas de matchs en ligne = 0% winrate
   winrateHistory.value = [
     { date: new Date(), winrate: currentWinRate }
   ]
@@ -472,6 +522,10 @@ const formatDuration = (seconds) => {
 // Computed pour les graphiques winrate
 const winrateLinePoints = computed(() => {
   if (winrateHistory.value.length === 0) return ''
+  if (winrateHistory.value.length === 1) {
+    // Si un seul point, placer au centre
+    return `200,${180 - ((winrateHistory.value[0].winrate / 100) * 160)}`
+  }
   return winrateHistory.value.map((item, index) => {
     const x = (index / (winrateHistory.value.length - 1)) * 380 + 10
     const y = 180 - ((item.winrate / 100) * 160)
@@ -481,6 +535,11 @@ const winrateLinePoints = computed(() => {
 
 const winrateAreaPath = computed(() => {
   if (winrateHistory.value.length === 0) return ''
+  if (winrateHistory.value.length === 1) {
+    // Si un seul point, créer une petite aire autour de ce point
+    const y = 180 - ((winrateHistory.value[0].winrate / 100) * 160)
+    return `M 190 180 L 190 ${y} L 210 ${y} L 210 180 Z`
+  }
   const points = winrateHistory.value.map((item, index) => {
     const x = (index / (winrateHistory.value.length - 1)) * 380 + 10
     const y = 180 - ((item.winrate / 100) * 160)
@@ -498,6 +557,11 @@ const winrateAreaPath = computed(() => {
 
 const winratePoints = computed(() => {
   if (winrateHistory.value.length === 0) return []
+  if (winrateHistory.value.length === 1) {
+    // Si un seul point, placer au centre
+    const y = 180 - ((winrateHistory.value[0].winrate / 100) * 160)
+    return [{ x: 200, y }]
+  }
   return winrateHistory.value.map((item, index) => {
     const x = (index / (winrateHistory.value.length - 1)) * 380 + 10
     const y = 180 - ((item.winrate / 100) * 160)
@@ -506,17 +570,6 @@ const winratePoints = computed(() => {
 })
 
 // Méthodes
-const changeAvatar = () => {
-  const avatars = [
-    'https://via.placeholder.com/150x150/d4af37/000000?text=🏓',
-    'https://via.placeholder.com/150x150/22c55e/ffffff?text=🏓',
-    'https://via.placeholder.com/150x150/3b82f6/ffffff?text=🏓',
-    'https://via.placeholder.com/150x150/8b5cf6/ffffff?text=🏓'
-  ]
-  const currentIndex = avatars.indexOf(avatar.value)
-  avatar.value = avatars[(currentIndex + 1) % avatars.length]
-}
-
 const formatDate = (date) => {
   return new Intl.DateTimeFormat('fr-FR', {
     year: 'numeric',
@@ -532,73 +585,103 @@ const formatShortDate = (date) => {
   }).format(date)
 }
 
-const exportStats = () => {
-  const stats = {
-    profile: {
-      username: username.value,
-      level: level.value,
-      memberSince: memberSince.value,
-      avatar: avatar.value
-    },
-    pongStats: pongStats.value,
-    matchHistory: pongMatchHistory.value,
-    winrateHistory: winrateHistory.value
-  }
-  
-  const dataStr = JSON.stringify(stats, null, 2)
-  const dataBlob = new Blob([dataStr], { type: 'application/json' })
-  const url = URL.createObjectURL(dataBlob)
-  
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `pong-stats-${username.value}.json`
-  link.click()
-  
-  URL.revokeObjectURL(url)
+// Fonctions pour l'édition du profil (simplifiées pour le composant)
+const openEditProfile = () => {
+  console.log('openEditProfile appelé - Avant:', showEditProfile.value)
+  showEditProfile.value = true
+  console.log('openEditProfile appelé - Après:', showEditProfile.value)
 }
 
-// Hook de cycle de vie
+const closeEditProfile = () => {
+  console.log('closeEditProfile appelé')
+  showEditProfile.value = false
+}
+
+// Fonction pour gérer la mise à jour du profil depuis le composant
+const handleProfileUpdated = async (updatedProfile) => {
+  // Mettre à jour les données locales
+  username.value = updatedProfile.username
+  avatar.value = updatedProfile.avatar
+  
+  // Recharger les données utilisateur pour synchroniser avec le backend
+  await loadUserData()
+}
+
+// Fonctions pour la gestion de la 2FA
+const toggle2FA = async () => {
+  if (twoFactorEnabled.value) {
+    await disable2FA()
+  } else {
+    await enable2FA()
+  }
+}
+
+const enable2FA = async () => {
+  showTwoFactorSetup.value = true
+}
+
+const disable2FA = async () => {
+  twoFactorLoading.value = true
+  twoFactorError.value = ''
+  
+  try {
+    const token = localStorage.getItem('auth_token')
+    if (!token) {
+      twoFactorError.value = 'Token d\'authentification non trouvé'
+      return
+    }
+    
+    const result = await twoFactorService.disable2FA(token)
+    
+    if (result.success) {
+      twoFactorEnabled.value = false
+      twoFactorError.value = ''
+    } else {
+      twoFactorError.value = result.message || 'Erreur lors de la désactivation de la 2FA'
+    }
+  } catch (error) {
+    twoFactorError.value = 'Erreur de connexion au serveur'
+  } finally {
+    twoFactorLoading.value = false
+  }
+}
+
+const handleTwoFactorSetupComplete = (enabled) => {
+  twoFactorEnabled.value = enabled
+  showTwoFactorSetup.value = false
+}
+
+const handleTwoFactorSetupSkipped = () => {
+  showTwoFactorSetup.value = false
+}
+
+// Hook de cycle de vie pour écouter les matches terminés
 const handleMatchCompleted = async (event) => {
-  console.log('Match completed event received:', event.detail)
   try {
     // Recharger les données utilisateur après le match
     await loadUserData()
-    console.log('User data refreshed after match completion')
   } catch (error) {
-    console.error('Error refreshing data after match:', error)
+    // Erreur silencieuse
   }
 }
 
 // Hook de cycle de vie
 onMounted(async () => {
-  console.log('Profile component mounted')
-  console.log('isAuthenticated:', isAuthenticated.value)
-  console.log('currentUser:', currentUser.value)
+  // Initialiser l'authentification
+  initializeAuth();
   
-  // Vérification de l'authentification
-  if (!isAuthenticated.value) {
-    console.log('User not authenticated, redirecting to signin')
-    router.push({
-      path: '/signin',
-      query: { redirect: '/profile' }
-    });
-    return;
-  }
-
-  console.log('User authenticated, loading data...')
-  // Charger les données utilisateur
+  // Le router guard s'occupe déjà de la vérification d'authentification
+  // Pas besoin de vérifier ici, nous pouvons directement charger les données
   await loadUserData()
   
   // Ajouter un écouteur d'événements pour les matches terminés
   window.addEventListener('matchCompleted', handleMatchCompleted)
-  console.log('Match completed event listener added')
 })
 
 // Nettoyage lors du démontage
 onUnmounted(() => {
   // Supprimer l'écouteur d'événements
   window.removeEventListener('matchCompleted', handleMatchCompleted)
-  console.log('Match completed event listener removed')
 })
 </script>
 
@@ -648,45 +731,6 @@ onUnmounted(() => {
 
 .avatar:hover {
   transform: scale(1.05);
-}
-
-.level-badge {
-  position: absolute;
-  bottom: 10px;
-  right: -10px;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 50%;
-  padding: 4px;
-  border: 2px solid #d4af37;
-}
-
-.pong-indicator {
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.paddle {
-  width: 3px;
-  height: 15px;
-  background: #d4af37;
-  border-radius: 2px;
-}
-
-.ball {
-  width: 8px;
-  height: 8px;
-  background: white;
-  border-radius: 50%;
-  animation: bounce 1s infinite;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(10px); }
 }
 
 .player-rank {
@@ -903,9 +947,10 @@ onUnmounted(() => {
 .chart-title {
   color: #d4af37;
   font-size: 1.3em;
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 20px;
   text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .skills-chart {
@@ -997,24 +1042,6 @@ onUnmounted(() => {
   color: #e0e0e0;
   margin-bottom: 25px;
   font-size: 1.1em;
-}
-
-.btn-play-now {
-  display: inline-block;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #d4af37, #c19b2e);
-  color: #1a1a1a;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.btn-play-now:hover {
-  background: linear-gradient(135deg, #c19b2e, #b8941f);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
 }
 
 /* Styles pour le graphique de winrate */
@@ -1239,26 +1266,6 @@ onUnmounted(() => {
 .flex { display: flex; }
 .justify-center { justify-content: center; }
 
-/* Responsivité */
-@media (max-width: 768px) {
-  .profile-container {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .avatar-section {
-    min-width: auto;
-  }
-  
-  .charts-section {
-    grid-template-columns: 1fr;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
-}
-
 /* Styles pour l'interactivité des cartes de statistiques */
 .stat-card.interactive {
   cursor: pointer;
@@ -1297,344 +1304,19 @@ onUnmounted(() => {
   transform: scale(1.2);
 }
 
-/* Styles pour les modales */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.3s ease;
+/* Styles pour l'état de sécurité */
+.security-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.modal-content {
-  background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #1a472a 100%);
-  border: 2px solid #d4af37;
-  border-radius: 1rem;
-  padding: 2rem;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-  position: relative;
-  animation: slideIn 0.3s ease;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-}
-
-.modal-close {
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  background: none;
-  border: none;
-  color: #d4af37;
-  font-size: 2rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.modal-close:hover {
-  color: #fff;
-  transform: scale(1.1);
-}
-
-.modal-title {
-  color: #d4af37;
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.modal-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.modal-stat {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  text-align: center;
-}
-
-.modal-stat-label {
-  color: #e0e0e0;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.modal-stat-value {
-  color: #d4af37;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-/* Styles pour la timeline des matches */
-.matches-timeline h4 {
-  color: #d4af37;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-}
-
-.timeline-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.8rem;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.5rem;
-}
-
-.timeline-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.timeline-dot.win {
-  background-color: #22c55e;
-}
-
-.timeline-dot.loss {
-  background-color: #ef4444;
-}
-
-.timeline-content {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.timeline-score {
-  color: #f8f9fa;
-  font-weight: bold;
-}
-
-.timeline-date {
-  color: #e0e0e0;
-  font-size: 0.8rem;
-}
-
-/* Styles pour l'analyse des victoires */
-.victory-analysis {
-  display: flex;
-  gap: 2rem;
-}
-
-.victory-chart {
-  flex: 1;
-  display: flex;
-  gap: 1rem;
-  align-items: end;
-  justify-content: center;
-  height: 200px;
-  margin-bottom: 1rem;
-}
-
-.chart-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  justify-content: end;
-}
-
-.chart-bar {
-  width: 60px;
-  background: linear-gradient(to top, #d4af37, #c19b2e);
-  border-radius: 4px 4px 0 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: end;
-  padding: 0.5rem;
-  min-height: 20px;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.chart-bar.defeat {
-  background: linear-gradient(to top, #ef4444, #dc2626);
-}
-
-.chart-bar:hover {
-  transform: scaleY(1.1);
-}
-
-.bar-label {
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: bold;
-  margin-bottom: 0.2rem;
-}
-
-.bar-value {
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-.victory-breakdown {
-  flex: 1;
-}
-
-.breakdown-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.8rem;
-  margin-bottom: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
-  border: 1px solid rgba(212, 175, 55, 0.3);
-}
-
-.breakdown-label {
-  color: #e0e0e0;
-}
-
-.breakdown-value {
-  color: #d4af37;
-  font-weight: bold;
-}
-
-.breakdown-value.win {
-  color: #22c55e;
-}
-
-.breakdown-value.loss {
-  color: #ef4444;
-}
-
-/* Styles pour l'analyse détaillée du winrate */
-.winrate-detailed {
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-}
-
-.winrate-gauge {
-  flex-shrink: 0;
-}
-
-.gauge-text {
-  fill: #d4af37;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.winrate-stats {
-  flex: 1;
-}
-
-.winrate-stat {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.8rem;
-  margin-bottom: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
-  border: 1px solid rgba(212, 175, 55, 0.3);
-}
-
-.winrate-label {
-  color: #e0e0e0;
-}
-
-.winrate-value {
-  color: #d4af37;
-  font-weight: bold;
-}
-
-.winrate-value.up {
-  color: #22c55e;
-}
-
-.winrate-value.down {
-  color: #ef4444;
-}
-
-.winrate-comparison h4 {
-  color: #d4af37;
-  margin: 1rem 0 0.5rem 0;
-  font-size: 1rem;
-}
-
-.opponent-winrates {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.opponent-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.6rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.3rem;
-  color: #e0e0e0;
-}
-
-.opponent-rate {
-  color: #d4af37;
-  font-weight: bold;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideIn {
-  from { 
-    opacity: 0;
-    transform: translateY(-50px) scale(0.9);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Responsivité pour les modales */
-@media (max-width: 768px) {
-  .modal-content {
-    margin: 1rem;
-    max-width: calc(100vw - 2rem);
-    padding: 1.5rem;
-  }
-  
-  .modal-stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .victory-analysis {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .winrate-detailed {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .stat-card.interactive:hover {
-    transform: translateY(-3px) scale(1.01);
-  }
+.security-status.secure {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 </style>

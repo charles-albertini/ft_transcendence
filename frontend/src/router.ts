@@ -12,7 +12,9 @@ import Tournamentplayer from "./components/tournamentplayer.vue";
 
 // Fonction de vérification d'authentification
 const isAuthenticated = () => {
-  return localStorage.getItem('user-token') !== null || localStorage.getItem('auth_token') !== null;
+  const authToken = localStorage.getItem('auth_token');
+  const userToken = localStorage.getItem('user-token');
+  return authToken !== null || userToken !== null;
 };
 
 const routes = [
@@ -42,9 +44,10 @@ const routes = [
     component: Game,
   },
   {
-    path: "/gamemulti-local",
-    name: "LocalGame",
-    component: Gamemulti
+
+	path: "/Gamemulti",
+	name: "Gamemulti",
+	component: Gamemulti,
   },
   {
     path: "/profile",
@@ -68,7 +71,7 @@ const routes = [
   },
   {
     path: "/Gamemulti",
-    redirect: { name: "LocalGame" }
+    redirect: { name: "MultiplayerLocal" }
   },
   // 5) Hub multijoueur
   {
@@ -83,11 +86,11 @@ const routes = [
     component: () => import("./components/CreateOrJoin.vue")
   },
   // 7) Flux en ligne : créer, rejoindre, waiting-room, jeu en ligne
-  {
-    path: "/multiplayer/create",
-    name: "CreateGame",
-    component: () => import("./components/CreateGame.vue")
-  },
+//   {
+//     path: "/multiplayer/create",
+//     name: "CreateGame",
+//     component: () => import("./components/CreateGame.vue")
+//   },
   {
     path: "/multiplayer/join",
     name: "JoinGame",
@@ -109,11 +112,30 @@ const routes = [
     name: "MultiplayerLocal",
     component: Gamemulti
   },
+  // Routes pour l'authentification Google
+  {
+    path: "/auth/success",
+    name: "GoogleAuthSuccess",
+    component: () => import("./components/GoogleAuthCallback.vue")
+  },
+  {
+    path: "/auth/error",
+    name: "GoogleAuthError",
+    component: () => import("./components/GoogleAuthCallback.vue")
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  // Ajout d'options pour améliorer la navigation
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { top: 0 };
+    }
+  },
 });
 
 // Navigation guard

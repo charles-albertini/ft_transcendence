@@ -158,14 +158,18 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { onMounted } from 'vue'
-import { authApi } from '../services/api'
+import { authApi } from '../services/authAPI'
+import { useAuth } from '../composable/useAuths'
+import { googleAuthService } from '../services/googleAuthAPI'
 
 // Utilisation de vue-i18n
 const { t, locale } = useI18n()
 
 // Props et émissions
 const router = useRouter()
+
+// Utilisation du composable d'authentification
+const { initializeAuth } = useAuth()
 
 // États réactifs
 const form = ref({
@@ -211,6 +215,8 @@ const handleSignIn = async () => {
     // Vérifier si la 2FA est requise
     if (response.requires2FA) {
       show2FA.value = true
+      // Stocker le token temporaire pour la vérification 2FA
+      localStorage.setItem('temp_2fa_token', response.tmpToken)
       pendingLoginData.value = response
       successMessage.value = t('2FARequired')
     } else {
@@ -219,8 +225,6 @@ const handleSignIn = async () => {
     }
     
   } catch (err) {
-    console.error('Login error:', err)
-    
     // Gestion des erreurs spécifiques
     if (err.response?.status === 401) {
       error.value = t('invalidCredentials')
@@ -249,7 +253,6 @@ const handle2FAVerification = async () => {
     // Vérification du code 2FA
     const response = await authApi.check2FA(twoFACode.value)
     
-    
     // Combiner les données de connexion avec la vérification 2FA
     const loginData = {
       ...pendingLoginData.value,
@@ -259,8 +262,6 @@ const handle2FAVerification = async () => {
     await handleSuccessfulLogin(loginData)
     
   } catch (err) {
-    console.error('2FA verification error:', err)
-    
     if (err.response?.status === 401) {
       error.value = t('invalid2FACode')
     } else {
@@ -273,6 +274,8 @@ const handle2FAVerification = async () => {
 
 const handleSuccessfulLogin = async (loginData) => {
   try {
+    // Nettoyer le token temporaire 2FA
+    localStorage.removeItem('temp_2fa_token')
     
     // Sauvegarder le token d'authentification
     if (loginData.token || loginData.accessToken) {
@@ -289,10 +292,10 @@ const handleSuccessfulLogin = async (loginData) => {
     if (loginData.user) {
       const userData = loginData.user
       localStorage.setItem('user_data', JSON.stringify(userData))
-    } else {
     }
     
-    // Vérification du stockage
+    // Mettre à jour le composable useAuth avec les nouveaux tokens
+    initializeAuth();
     
     successMessage.value = t('loginSuccessful')
     
@@ -302,14 +305,17 @@ const handleSuccessfulLogin = async (loginData) => {
     }, 1500)
     
   } catch (err) {
-    console.error('Error handling successful login:', err)
     error.value = t('loginProcessingError')
   }
 }
 
 const handleGoogleSignIn = () => {
-  // Ici vous pourriez implémenter la connexion Google
-  alert(t('googleSignInNotImplemented'))
+  try {
+    // Rediriger vers l'authentification Google
+    googleAuthService.initiateGoogleLogin()
+  } catch (err) {
+    error.value = t('googleSignInError') || 'Erreur lors de la connexion Google'
+  }
 }
 
 const goToSignUp = () => {
@@ -319,10 +325,6 @@ const goToSignUp = () => {
 const goBack = () => {
   router.push('/')
 }
-
-// Initialisation simple au montage
-onMounted(() => {
-})
 </script>
 
 <style scoped>
@@ -731,28 +733,5 @@ label {
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-20px) rotate(180deg); }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .signin-content {
-    padding: 2rem;
-    margin: 1rem;
-  }
-  
-  .title {
-    font-size: 1.75rem;
-  }
-  
-  .form-options {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
 }
 </style>

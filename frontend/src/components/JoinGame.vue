@@ -1,7 +1,11 @@
 <!-- src/components/JoinGame.vue -->
 <template>
   <div class="join-game-container">
-    <h1>{{ $t('joinGameTitle') /* “Rejoindre une partie” */ }}</h1>
+    <h1>{{ $t('joinGameTitle') /* "Rejoindre une partie" */ }}</h1>
+
+    <div class="user-info" v-if="username">
+      <p>Connecté en tant que: <strong>{{ username }}</strong></p>
+    </div>
 
     <input
       v-model="gameIdValue"
@@ -15,11 +19,11 @@
       :disabled="!gameIdValue.trim() || isJoining"
       class="btn btn-join"
     >
-      {{ isJoining ? $t('joining') /* “En cours…” */ : $t('joinGameBtn') /* “Rejoindre” */ }}
+      {{ isJoining ? $t('joining') /* "En cours…" */ : $t('joinGameBtn') /* "Rejoindre" */ }}
     </button>
 
     <button @click="goBack" class="btn btn-back">
-      {{ $t('backBtn') /* “Retour” */ }}
+      {{ $t('backBtn') /* "Retour" */ }}
     </button>
 
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -44,13 +48,18 @@ const isJoining = ref<boolean>(false);
 const errorMessage = ref<string|null>(null);
 let assignedPlayerId: string|null = null;
 
+// Récupération du nom d'utilisateur
+const username = ref('');
+const parsedUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+username.value = parsedUser.username || 'Invité';
+
 // 1) À la montée, on connecte la WS
 onMounted(() => {
   console.log('[JoinGame] onMounted : connexion WS…');
+  console.log('[JoinGame] Nom d\'utilisateur:', username.value);
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const host     = window.location.host;        // localhost:5000
   connectSocket(`${protocol}://${host}/ws/`);
-
 
   setOnMessage((data: any) => {
     console.log('[JoinGame] WS onMessage →', data);
@@ -98,13 +107,16 @@ onUnmounted(() => {
 
 function tryJoin() {
   console.log('[JoinGame] tryJoin() appelé, gameIdValue =', gameIdValue.value);
+  console.log('[JoinGame] Nom d\'utilisateur =', username.value);
   if (!gameIdValue.value.trim()) return;
 
   errorMessage.value = null;
   isJoining.value = true;
 
+  // MODIFICATION: Envoi du nom d'utilisateur avec la requête de join
   sendMessage('join-game', {
-    gameId: gameIdValue.value.trim()
+    gameId: gameIdValue.value.trim(),
+    username: username.value
   });
 }
 
@@ -123,11 +135,27 @@ function goBack() {
   gap: 1rem;
   color: #f8f9fa;
 }
+
 h1 {
   font-size: 2rem;
   color: #d4af37;
   margin-bottom: 1rem;
 }
+
+.user-info {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.user-info p {
+  margin: 0;
+  color: #d4af37;
+  font-size: 0.9rem;
+}
+
 .input-game-id {
   padding: 0.75rem 1rem;
   font-size: 1rem;
@@ -137,10 +165,12 @@ h1 {
   background-color: rgba(255, 255, 255, 0.9);
   color: #1a1a1a;
 }
+
 .input-game-id:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
 }
+
 .btn {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
@@ -152,22 +182,28 @@ h1 {
   transition: background-color 0.2s ease-in-out;
   min-width: 140px;
 }
+
 .btn-join {
   background-color: #4caf50;
 }
+
 .btn-join:hover:not(:disabled) {
   background-color: #388e3c;
 }
+
 .btn-join:disabled {
   background-color: #666;
   cursor: not-allowed;
 }
+
 .btn-back {
   background-color: #f44336;
 }
+
 .btn-back:hover {
   background-color: #da190b;
 }
+
 .error-message {
   color: #ff5252;
   margin-top: 0.5rem;

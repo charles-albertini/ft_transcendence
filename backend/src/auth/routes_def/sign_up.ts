@@ -7,7 +7,6 @@ import { SignUpRequest } from '../../interfaces'
 export async function sign_up (request: FastifyRequest<{ Body: SignUpRequest }>, reply: FastifyReply)
 {
 	try {
-		// console.log('sign_up called with body:', request.body)
 		const { username, email_adress, password } = request.body
 		const existingUser = await User.findOne({ 
 			where: { [Op.or]: [{ email_adress }, { username }] }

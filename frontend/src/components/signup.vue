@@ -1,14 +1,6 @@
 <template>
-  <!-- Affichage du setup 2FA si activé -->
-  <TwoFactorSetup 
-    v-if="showTwoFactorSetup"
-    :user-token="userToken"
-    @setup-complete="handleTwoFactorComplete"
-    @setup-skipped="handleTwoFactorSkip"
-  />
-  
-  <!-- Page d'inscription normale -->
-  <div v-else class="signup-container">
+  <!-- Page d'inscription -->
+  <div class="signup-container">
     <!-- Header avec retour et langue -->
     <header class="header">
       <button @click="goBack" class="back-button">
@@ -183,7 +175,6 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composable/useAuths'
-import TwoFactorSetup from './TwoFactorSetup.vue'
 
 // Utilisation de vue-i18n
 const { t, locale } = useI18n()
@@ -208,8 +199,6 @@ const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const passwordStrength = ref(0)
 const passwordFeedback = ref('')
-const showTwoFactorSetup = ref(false)
-const userToken = ref('')
 
 // Charger la langue préférée
 const savedLanguage = localStorage.getItem('preferred-language')
@@ -310,40 +299,13 @@ const handleSignUp = async () => {
     if (response.message === 'User created successfully') {
       successMessage.value = t('registrationSuccessful')
       
-      // Récupérer le token depuis la réponse du backend
-      if (response.token || response.accessToken) {
-        userToken.value = response.token || response.accessToken
-      }
-      // Si pas de token, faire une connexion automatique
-      else {
-        try {
-          const loginResponse = await login({
-            email: form.value.email,
-            password: form.value.password
-          })
-          if (loginResponse.token || loginResponse.accessToken) {
-            userToken.value = loginResponse.token || loginResponse.accessToken
-          } else {
-            throw new Error('No token received from auto-login')
-          }
-        } catch (loginError) {
-          error.value = 'Inscription réussie. Veuillez vous connecter pour configurer la 2FA.'
-          setTimeout(() => {
-            router.push('/signin')
-          }, 2000)
-          return
-        }
-      }
-      
-      // Afficher le setup 2FA après un court délai
+      // Rediriger vers la page de connexion après inscription réussie
       setTimeout(() => {
-        showTwoFactorSetup.value = true
-      }, 1500)
+        router.push('/signin')
+      }, 2000)
     }
     
   } catch (err) {
-    console.error('Registration error:', err)
-    
     // Simplified error handling
     error.value = err?.message || t('registrationError')
   } finally {
@@ -357,14 +319,6 @@ const goToSignIn = () => {
 
 const goBack = () => {
   router.push('/')
-}
-
-const handleTwoFactorComplete = (result) => {
-  router.push('/signin')
-}
-
-const handleTwoFactorSkip = () => {
-  router.push('/signin')
 }
 
 // Écouter les changements du mot de passe
@@ -646,23 +600,6 @@ watch(() => form.value.password, (newPassword) => {
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-20px) rotate(180deg); }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .signup-content {
-    padding: 2rem;
-    margin: 1rem;
-  }
-  
-  .title {
-    font-size: 1.75rem;
-  }
 }
 
 .password-strength-container {

@@ -1,5 +1,29 @@
+// Fonction pour rafraîchir le token (sans utiliser fetchWithAuth pour éviter la référence circulaire)
+const refreshTokenDirect = async (refreshToken: string) => {
+  const response = await fetch("/api/auth/refreshtoken", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${refreshToken}`,
+    },
+    body: JSON.stringify({ refreshtoken: refreshToken }),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`)
+  }
+
+  const contentType = response.headers.get("content-type")
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json()
+  }
+
+  return {}
+}
+
 // Fonction utilitaire pour les requêtes fetch
-export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+export const fetchWithAuth = async (url: string, options: RequestInit = {}, isRetry = false): Promise<any> => {
 	// Récupérer le token d'authentification
 	const token = localStorage.getItem("auth_token")
 	// Préparer les headers avec le token
@@ -16,11 +40,44 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 		headers,
 	  })
 	  
-	  // Gérer les erreurs d'authentification
-	  if (response.status === 401) {
-		localStorage.removeItem("auth_token")
-		window.location.href = "/signin"
-		throw new Error("Session expirée. Veuillez vous reconnecter.")
+	  // Si le token a expiré (401) et qu'on n'a pas encore essayé de le rafraîchir
+	  if (response.status === 401 && !isRetry && url !== "/auth/refreshtoken") {
+		const refreshToken = localStorage.getItem("refresh_token")
+		
+		if (refreshToken) {
+		  try {
+			// Tenter de rafraîchir le token directement
+			const refreshResponse = await refreshTokenDirect(refreshToken)
+			
+			// Sauvegarder le nouveau token
+			if (refreshResponse.token) {
+			  localStorage.setItem("auth_token", refreshResponse.token)
+			  
+			  // Optionnel: sauvegarder le nouveau refresh token s'il est fourni
+			  if (refreshResponse.refreshToken) {
+				localStorage.setItem("refresh_token", refreshResponse.refreshToken)
+			  }
+			  
+			  // Réessayer la requête originale avec le nouveau token
+			  return fetchWithAuth(url, options, true)
+			}
+		  } catch (refreshError) {
+			// Si le refresh échoue, déconnecter l'utilisateur
+			localStorage.removeItem("auth_token")
+			localStorage.removeItem("refresh_token")
+			localStorage.removeItem("temp_2fa_token")
+			
+			// Rediriger vers la page de connexion
+			window.location.href = "/signin"
+			throw new Error("Session expired. Please log in again.")
+		  }
+		} else {
+		  // Pas de refresh token, déconnecter
+		  localStorage.removeItem("auth_token")
+		  localStorage.removeItem("temp_2fa_token")
+		  window.location.href = "/signin"
+		  throw new Error("Session expired. Please log in again.")
+		}
 	  }
 	  
 	  // Vérifier si la réponse est OK
@@ -37,89 +94,6 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 	  
 	  return {}
 	} catch (error) {
-	  console.error("API request error:", error)
 	  throw error
 	}
-  }
-  
-  // API d'authentification - CORRIGÉE pour correspondre au backend
-  export const authApi = {
-	// Connexion utilisateur - CHANGÉ: /auth/login -> /auth
-	login: async (credentials: { email: string; password: string; rememberMe?: boolean }) => {
-	  return await fetchWithAuth('/auth', {
-		method: 'POST',
-		body: JSON.stringify(credentials),
-	  })
-	},
-  
-	// Vérification 2FA - CHANGÉ: /auth/verify-2fa -> /auth/check2FA
-	check2FA: async (code: string) => {
-	  return await fetchWithAuth('/auth/check2FA', {
-		method: 'POST',
-		body: JSON.stringify({ code }),
-	  })
-	},
-  
-	// Inscription utilisateur - Mise à jour pour correspondre au backend
-	register: async (userData: { 
-	  username: string;
-	  email_adress: string;
-	  password: string;
-	}) => {
-	  return await fetchWithAuth('/auth/register', {
-		method: 'POST',
-		body: JSON.stringify(userData),
-	  })
-	},
-  
-	// Actualisation du token - CHANGÉ: /auth/refresh-token -> /auth/refreshtoken
-	refreshToken: async () => {
-	  const refreshToken = localStorage.getItem('refresh_token')
-	  if (!refreshToken) {
-		throw new Error('No refresh token available')
-	  }
-	  
-	  return await fetchWithAuth('/auth/refreshtoken', {
-		method: 'POST',
-		body: JSON.stringify({ refreshToken }),
-	  })
-	},
-  
-	// Routes non encore implémentées côté backend - À commenter ou implémenter
-	/*
-	logout: async () => {
-	  return await fetchWithAuth('/auth/logout', {
-		method: 'POST',
-	  })
-	},
-  
-	getProfile: async () => {
-	  return await fetchWithAuth('/auth/profile')
-	},
-  
-	updateProfile: async (profileData: any) => {
-	  return await fetchWithAuth('/auth/profile', {
-		method: 'PUT',
-		body: JSON.stringify(profileData),
-	  })
-	},
-  
-	forgotPassword: async (email: string) => {
-	  return await fetchWithAuth('/auth/forgot-password', {
-		method: 'POST',
-		body: JSON.stringify({ email }),
-	  })
-	},
-  
-	resetPassword: async (token: string, password: string) => {
-	  return await fetchWithAuth('/auth/reset-password', {
-		method: 'POST',
-		body: JSON.stringify({ token, password }),
-	  })
-	},
-  
-	verifyToken: async () => {
-	  return await fetchWithAuth('/auth/verify-token')
-	}
-	*/
-  }
+}

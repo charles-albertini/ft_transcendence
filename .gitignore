@@ -1,0 +1,7 @@
+.env
+node_modules/
+volumes/logs/*
+volumes/mariadb/*
+
+nginx/certificates/*
+.vscode/

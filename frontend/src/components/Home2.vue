@@ -147,7 +147,10 @@
   export default defineComponent({
     setup() {
       const router = useRouter();
-  
+      
+      // Initialiser l'authentification
+      const { initializeAuth } = useAuth();
+
       // Utilisation de vue-i18n
       const { t, locale } = useI18n()
   
@@ -245,7 +248,7 @@
         localStorage.removeItem('auth_token')
         localStorage.removeItem('refresh_token')
         // Rediriger vers la page de connexion
-        router.push('/signin')
+        router.push('/')
       }
   
       // Fonctions pour le popup
@@ -274,7 +277,6 @@
             if (parsedUser.username) {
               username.value = parsedUser.username
             } else {
-              console.error('Username not found in user data')
               // Si on ne trouve pas username, vérifions d'autres propriétés possibles
               const possibleUsernames = ['name', 'userName', 'login', 'email']
               for (const key of possibleUsernames) {
@@ -285,15 +287,71 @@
               }
             }
           } else {
-            console.error('No user data found in localStorage')
+            // No user data found in localStorage
           }
         } catch (err) {
-          console.error('Error parsing user data:', err)
+          // Error parsing user data
         }
+      }
+
+      // Fonction pour extraire et traiter les tokens Google depuis l'URL
+      const extractGoogleTokens = () => {
+        console.log('🔍 Vérification des paramètres URL pour les tokens Google...')
+        console.log('URL actuelle:', window.location.href)
+        
+        const urlParams = new URLSearchParams(window.location.search)
+        const token = urlParams.get('token')
+        const refreshToken = urlParams.get('refreshToken')
+        const userData = urlParams.get('userData')
+        
+        console.log('Token trouvé:', token ? 'Oui' : 'Non')
+        console.log('RefreshToken trouvé:', refreshToken ? 'Oui' : 'Non')
+        console.log('UserData trouvé:', userData ? 'Oui' : 'Non')
+        
+        if (token && refreshToken) {
+          console.log('✅ Tokens Google détectés, sauvegarde en cours...')
+          
+          // Sauvegarder les tokens Google
+          localStorage.setItem('google_token', token)
+          localStorage.setItem('google_refresh_token', refreshToken)
+          localStorage.setItem('auth_token', token) // Pour compatibilité
+          localStorage.setItem('refresh_token', refreshToken)
+          
+          // Sauvegarder les données utilisateur si disponibles
+          if (userData) {
+            try {
+              const parsedUserData = JSON.parse(decodeURIComponent(userData))
+              localStorage.setItem('user_data', JSON.stringify(parsedUserData))
+              username.value = parsedUserData.username
+              console.log('✅ Données utilisateur Google sauvegardées:', parsedUserData.username)
+            } catch (err) {
+              console.warn('⚠️ Erreur lors du parsing des données utilisateur:', err)
+            }
+          }
+          
+          // Nettoyer l'URL
+          const url = new URL(window.location.href)
+          url.search = ''
+          window.history.replaceState({}, document.title, url.toString())
+          
+          // Réinitialiser l'authentification
+          initializeAuth()
+          
+          console.log('✅ Tokens Google sauvegardés avec succès')
+          return true
+        }
+        
+        console.log('ℹ️ Aucun token Google trouvé dans l\'URL')
+        return false
       }
 
       // Lifecycle hooks
       onMounted(() => {
+        // Vérifier et extraire les tokens Google en premier
+        extractGoogleTokens()
+        
+        // Initialiser l'authentification au démarrage
+        initializeAuth()
         animatePong()
         getUserData()
       })
@@ -317,7 +375,18 @@
 
       // Nouvelle Feature 4 pour le profil avec vérification d'authentification
       const goToFeature4 = () => {
-        // L'utilisateur est toujours connecté sur cette page
+        // Vérifier s'il y a des tokens d'authentification
+        const authToken = localStorage.getItem('auth_token')
+        const userToken = localStorage.getItem('user-token')
+        const googleToken = localStorage.getItem('google_token')
+        const googleRefreshToken = localStorage.getItem('google_refresh_token')
+        
+        // Si aucun token n'existe (ni classique ni Google), créer un token temporaire pour permettre l'accès
+        if (!authToken && !userToken && !googleToken) {
+          localStorage.setItem('auth_token', 'temporary_session_token')
+        }
+        
+        // L'utilisateur est toujours connecté sur cette page (authentification classique ou Google)
         router.push('/profile')
       }
 
@@ -669,55 +738,9 @@ html, body {
 }
   
   @keyframes float {
-	0%, 100% { transform: translateY(0px) rotate(0deg); }
-	50% { transform: translateY(-20px) rotate(180deg); }
+	0%, 100% { transform: translateY(0px) rotate(0deg); }  50% { transform: translateY(-20px) rotate(180deg); }
   }
   
-  /* Responsive */
-  @media (max-width: 768px) {
-  .main-title {
-    font-size: 2rem; /* Réduction pour mobile */
-  }
-  
-  .hero-section {
-    padding: 0.5rem 1rem; /* Réduction du padding mobile */
-    height: calc(100vh - 60px); /* Ajustement pour mobile */
-  }
-  
-	.main-title {
-	  font-size: 2.5rem;
-	}
-	
-	.pong-table-container {
-	  margin: 1.5rem 0;
-	}
-	
-	.pong-table {
-	  transform: scale(0.7); /* Réduction de 0.8 à 0.7 */
-	}
-	
-	.action-buttons {
-	  flex-direction: column;
-	  align-items: center;
-	}
-	
-	.header {
-	  flex-direction: column;
-	  gap: 1rem;
-	}
-  
-  .features-buttons {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem; /* Réduction pour mobile */
-    margin-top: 1rem;
-  }
-  
-  .feature-button {
-    padding: 1rem; /* Réduction pour mobile */
-    min-height: 140px; /* Réduction pour mobile */
-  }
-}
-
   /* Styles pour les 4 boutons de fonctionnalités */
   .features-buttons {
   display: grid;
@@ -795,31 +818,6 @@ html, body {
     font-weight: bold;
     opacity: 0;
     transition: all 0.3s ease;
-  }
-
-  /* Responsive pour les boutons de fonctionnalités */
-  @media (max-width: 768px) {
-    .features-buttons {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
-    }
-    
-    .feature-button {
-      padding: 1rem;
-      min-height: 140px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .features-buttons {
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
-    }
-    
-    .feature-button {
-      padding: 1rem;
-      min-height: 120px; /* Réduction pour très petit écran */
-    }
   }
 
   /* Styles pour le popup de connexion */
@@ -956,39 +954,6 @@ html, body {
     }
     60% {
       transform: translateY(-5px);
-    }
-  }
-
-  @media (max-width: 480px) {
-    .popup-buttons {
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-    
-    .popup-btn {
-      width: 100%;
-    }
-    
-    .popup-content {
-      padding: 1.5rem;
-    }
-    
-    .popup-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-    
-    .popup-content p {
-      font-size: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .popup-features {
-      gap: 0.75rem;
-    }
-
-    .popup-feature {
-      padding: 0.5rem;
     }
   }
   </style>

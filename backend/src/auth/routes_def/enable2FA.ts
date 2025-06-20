@@ -12,13 +12,16 @@ export async function enable2FA(request: FastifyRequest, reply: FastifyReply) {
 		if (!user) {
 			return reply.code(404).send({ error: 'User not found' });
 		}
+		if (user.google_user) {
+			return reply.status(400).send({ error: 'Cannot enable 2FA for Google-authenticated users' });
+		}
 
 		const generatedSecret = speakeasy.generateSecret({ name: `TonApp (${user.username})`, });
 		if (!generatedSecret) {
 			return reply.code(400).send({ error: 'Internal ERROR' });
 		}
 
-		await user.update( { twoFA: true, twoFA_secret: generatedSecret.base32 }, );
+		await user.update({ twoFA_secret: generatedSecret.base32 });
 		if (generatedSecret.otpauth_url) {
 			const qrCode = await QRCode.toDataURL(generatedSecret.otpauth_url);
 			return reply.send({ qrCode: qrCode, secret: generatedSecret.base32 });
