@@ -41,14 +41,6 @@ export function setOnMessage(cb: (data: any) => void) {
   onMessageCallback = cb;
 }
 
-export function closeSocket() {
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.close();
-  }
-  socket = undefined as any;
-  onMessageCallback = null;
-}
-
 /**
  * Envoie un message JSON vers le serveur.
  */

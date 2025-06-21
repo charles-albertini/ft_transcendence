@@ -62,7 +62,7 @@
 				<span class="label">{{ $t('status') }}:</span>
 				<span class="status online">{{ $t('online') }}</span>
 			  </div>
-
+			  
 			  <div class="info-row">
 				<span class="label">{{ $t('memberSince') }}:</span>
 				<span class="value">{{ formatDate(memberSince) }}</span>
@@ -79,6 +79,15 @@
 				  {{ twoFactorEnabled ? '🔒 2FA Activée' : '🔓 2FA Désactivée' }}
 				</span>
 			  </div>
+			  <div class="info-row">
+				<span class="label">{{ $t('friends') || 'Amis' }}:</span>
+				<div class="friends-preview">
+				  <span class="friends-count">{{ friendsCount }} amis</span>
+				  <button @click="goToFriendsManager" class="btn btn-friends">
+					👥 {{ $t('manageFriends') || 'Gérer mes amis' }}
+			  </button>
+			</div>
+		  </div>
 			</div>
 		  </div>
 
@@ -261,6 +270,12 @@
 			>
 			  ⚙️ {{ $t('editProfile') || 'Modifier le profil' }}
 			</button>
+			<button 
+			  @click="goToFriendsManager" 
+			  class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2"
+			>
+			  👥 {{ $t('friends') || 'Amis' }}
+			</button>
 			<router-link 
 			  to="/Home2" 
 			  class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2"
@@ -282,11 +297,14 @@ import { useRouter } from 'vue-router';
 import { userApi } from '../services/userAPI.ts';
 import { DEFAULT_AVATARS_BASE64 } from '../utils/imageUtils.ts';
 import EditProfileModal from './EditProfileModal.vue';
+import { friendsApi } from '../services/friendsAPI';
 
 const { t } = useI18n()
 const { user: currentUser, isAuthenticated, initializeAuth } = useAuth();
 const { fetchUser, isLoading, error } = useUser();
 const router = useRouter();
+
+const friendsCount = ref(0)
 
 // État local avec la Composition API
 const username = ref('')
@@ -320,6 +338,22 @@ const twoFactorEnabled = ref(false)
 const winRatePercentage = computed(() => {
   return pongStats.value.matchesPlayed > 0 ? Math.round((pongStats.value.victories / pongStats.value.matchesPlayed) * 100) : 0
 })
+
+const goToFriendsManager = () => {
+  router.push('/friends')
+}
+
+const loadFriendsCount = async () => {
+  try {
+    const response = await friendsApi.getFriendsList()
+    if (response.friends) {
+      friendsCount.value = response.friends.length
+    }
+  } catch (error) {
+    // Erreur silencieuse pour le compteur d'amis
+    friendsCount.value = 0
+  }
+}
 
 const levelProgress = computed(() => {
   const baseMatches = (level.value - 1) * 10
@@ -672,7 +706,10 @@ onMounted(async () => {
   
   // Le router guard s'occupe déjà de la vérification d'authentification
   // Pas besoin de vérifier ici, nous pouvons directement charger les données
-  await loadUserData()
+  await Promise.all([
+    loadUserData(),
+    loadFriendsCount()
+  ])
   
   // Ajouter un écouteur d'événements pour les matches terminés
   window.addEventListener('matchCompleted', handleMatchCompleted)
@@ -1319,4 +1356,45 @@ onUnmounted(() => {
   color: #86efac;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
+
+.friends-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.friends-count {
+  color: #e0e0e0;
+  font-size: 1rem;
+}
+
+.btn-friends {
+  background: rgba(59, 130, 246, 0.8);
+  color: white;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.btn-friends:hover {
+  background: rgba(59, 130, 246, 0.9);
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-2px);
+}
+
+.bg-blue-600 {
+  background: rgba(59, 130, 246, 0.8);
+  color: white;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.bg-blue-600:hover {
+  background: rgba(59, 130, 246, 0.9);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
 </style>

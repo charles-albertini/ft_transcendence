@@ -123,6 +123,15 @@ const routes = [
     name: "GoogleAuthError",
     component: () => import("./components/GoogleAuthCallback.vue")
   },
+  {
+  path: '/friends',
+  name: 'Friends',
+  component: () => import('./components/FriendsManager.vue'),
+  meta: { 
+    requiresAuth: true,
+    title: 'Gestion des Amis'
+  }
+}
 ];
 
 const router = createRouter({

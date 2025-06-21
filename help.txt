@@ -1,5 +1,5 @@
-https://10.12.1.4:8444
-https://localhost:8444
+https://10.12.1.5:5000
+https://localhost:5000
 
 integrer nom joueur
 qui a gagner
@@ -10,3 +10,5 @@ faire le premier a 5 (pour 2 et 4)
 mettre guest + num si joueur pas connecter
 mettre le score a coter du nom 
 gerer deconnection 
+
+

@@ -1,5 +1,6 @@
 import { ref, computed } from "vue"
 import { authApi } from "../services/authAPI"
+import { onlineStatusService } from '../services/onlineStatusService'
 
 // Fonction pour récupérer le token actuel
 const getCurrentToken = () => {
@@ -66,6 +67,9 @@ export function useAuth() {
         localStorage.setItem("user_data", JSON.stringify(response.user))
       }
 
+      // Démarrer le service de statut en ligne après connexion réussie
+      onlineStatusService.start()
+
       return response
     } catch (err: any) {
       error.value = err.message || "Erreur de connexion"
@@ -76,27 +80,38 @@ export function useAuth() {
   }
 
   const logout = () => {
+    // Arrêter le service de statut en ligne
+    onlineStatusService.stop()
+    
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user-token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('user_data')
+    localStorage.removeItem('google_token')
+    localStorage.removeItem('google_refresh_token')
+    
+    // CORRECTION: Ne pas assigner à isAuthenticated (c'est un computed)
+    // Il suffit de vider le token et user, isAuthenticated se mettra à jour automatiquement
     user.value = null
     token.value = null
     refreshToken.value = null
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("user-token") // Nettoyer aussi l'ancien token
-    localStorage.removeItem("refresh_token")
-    localStorage.removeItem("user_data")
-    localStorage.removeItem("remember_me")
-    localStorage.removeItem("user_email")
   }
 
   const initializeAuth = () => {
-    // Mettre à jour le token depuis localStorage
-    token.value = getCurrentToken();
+    const authToken = localStorage.getItem('auth_token') || localStorage.getItem('user-token')
+    const userData = localStorage.getItem('user_data')
     
-    const savedUser = localStorage.getItem("user_data")
-    if (savedUser) {
+    if (authToken && userData) {
       try {
-        user.value = JSON.parse(savedUser)
+        user.value = JSON.parse(userData)
+        token.value = authToken
+        
+        // Démarrer le service de statut en ligne
+        onlineStatusService.start()
+        
       } catch (error) {
-        localStorage.removeItem("user_data")
+        console.error('Erreur lors de l\'initialisation de l\'authentification:', error)
+        logout()
       }
     }
   }

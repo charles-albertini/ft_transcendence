@@ -1,10 +1,10 @@
-// backend/src/profile/routes_def/PendingRequest.ts
+// backend/src/profile/routes_def/sentRequests.ts
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { User } from '../../db_models/user_model';
 import { JWTpayload } from '../../interfaces';
 import { Friendship } from '../../db_models/friendship_model';
 
-export async function pendingRequest(request: FastifyRequest, reply: FastifyReply) {
+export async function sentRequests(request: FastifyRequest, reply: FastifyReply) {
 	try {
 		const payload = request.user as JWTpayload;
 		const user = await User.findByPk(payload.user_id);
@@ -12,40 +12,38 @@ export async function pendingRequest(request: FastifyRequest, reply: FastifyRepl
 			return reply.code(404).send({ error: 'User not found'})
 		}
 
-		// CORRECTION: Chercher les demandes où user_id1 = current_user (demandes REÇUES)
-		// user_id1 = celui qui reçoit la demande, user_id2 = celui qui envoie
-		const pendingRequests = await Friendship.findAll({
+		const sentRequests = await Friendship.findAll({
 			where: {
-				user_id1: user.user_id,
+				user_id2: user.user_id,
 				status: 'pending'
 			},
 			include: [
 				{
 					model: User,
-					as: 'receiver', // receiver = user_id2 = celui qui a ENVOYÉ la demande
+					as: 'sender',
 					attributes: [ 'username' ]
 				}
 			],
 			order: [['creation_date', 'DESC']]
 		});
 
-		if (!pendingRequests || pendingRequests.length === 0) {
+		if (!sentRequests || sentRequests.length === 0) {
 			return reply.code(200).send({ 
-				message: 'No pending friend requests',
-				pending_requests: []
+				message: 'No sent friend requests',
+				sent_requests: []
 			});
 		}
 		
-		const formattedRequests = pendingRequests.map(request => ({
+		const formattedRequests = sentRequests.map(request => ({
 			friendship_id: request.friendship_id,
-			sender: { username: (request as any).receiver.username }, // receiver = sender dans ce contexte
+			receiver: { username: (request as any).sender.username },
 			creation_date: request.creation_date,
 			status: request.status
 		}));
 
 		return reply.code(200).send({
-			total_pending: formattedRequests.length,
-			pending_requests: formattedRequests
+			total_sent: formattedRequests.length,
+			sent_requests: formattedRequests
 		});
 	}
 	catch (error) {

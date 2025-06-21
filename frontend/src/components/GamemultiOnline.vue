@@ -144,11 +144,10 @@
   <script setup lang="ts">
   import { ref, reactive, onMounted, onUnmounted, watch, computed } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { connectSocket, sendMessage, setOnMessage, closeSocket } from '../services/websocket';
+  import { connectSocket, sendMessage, setOnMessage } from '../services/websocket';
   
   const route = useRoute();
   const router = useRouter();
-  const stillMounted = ref(true);
   const gameId = (route.query.id as string) || '';
   const playerId = (route.query.playerId as string) || '';
   if (!gameId || !playerId) router.replace({ name: 'Home' });
@@ -251,15 +250,12 @@
   );
   
   function handlePlayerDisconnection() {
-	if (playerDisconnected.value) return;
 	playerDisconnected.value = true;
 	disconnectCountdown.value = 3;
 	
 	disconnectTimer = setInterval(() => {
 	  disconnectCountdown.value--;
 	  if (disconnectCountdown.value <= 0) {
-		setOnMessage(() => {});
-		closeSocket();
 		goHome();
 	  }
 	}, 1000);
@@ -326,7 +322,7 @@
   }
   
   function updateBall() {
-	if (!isHost || !gameState.gameStarted || gameOver.value) return;
+	if (!isHost || !gameState.gameStarted) return;
 	
 	// Taille des paddles selon le mode
 	const paddleHeight = gameState.gameMode === 4 ? 80 : 60;
@@ -463,19 +459,6 @@
 		resetBall();
 	  }
 	}
-	const maxScore = Math.max(
-      gameState.score.player1, 
-      gameState.score.player2, 
-      gameState.score.player3, 
-      gameState.score.player4
-    );
-  
-    if (maxScore >= winningScore) {
-      gameOver.value = true;
-      // Arrêter les vitesses de la balle
-      gameState.ballSpeedX = 0;
-      gameState.ballSpeedY = 0;
-  }
   }
   
   function resetBall() {
@@ -564,10 +547,8 @@
   }
   
   function gameLoop() {
-	if (!stillMounted.value) return;
-
 	updatePaddles();
-	if (isHost && !gameOver.value) {
+	if (isHost) {
 	  updateBall();
 	  if (animationId % 1 === 0) {
 		sendMessage('game-update', {
@@ -585,9 +566,7 @@
 	  }
 	}
 	draw();
-	if (!gameOver.value) {
-      animationId = requestAnimationFrame(gameLoop);
-  }
+	animationId = requestAnimationFrame(gameLoop);
   }
   
   function resetGame() {
@@ -600,12 +579,7 @@
 	gameOver.value = false;
 	resetBall();
 	
-	if (animationId) {
-    cancelAnimationFrame(animationId);
-  }
-  gameLoop();
-  
-  sendMessage('reset-game', { gameId });
+	sendMessage('reset-game', { gameId });
   }
   
   function getWinnerText() {
@@ -717,10 +691,6 @@
 		  gameState.score.player4 = 0;
 		  gameOver.value = false;
 		  resetBall();
-		  if (!isHost && animationId) {
-   			 cancelAnimationFrame(animationId);
-    		gameLoop();
-  			}
 		  break;
 		}
   
@@ -731,7 +701,7 @@
 		}
 	  }
 	});
-
+  
 	sendMessage('get-players', { gameId });
 	
 	setTimeout(() => {
@@ -761,10 +731,6 @@
 	document.removeEventListener('keydown', onKeyDown);
 	document.removeEventListener('keyup', onKeyUp);
 	window.removeEventListener('resize', handleResize);
-
-	stillMounted.value = false;
-	setOnMessage(() => {});
-	closeSocket();
   });
   </script>
   
