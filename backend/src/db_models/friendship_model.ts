@@ -66,4 +66,22 @@ Friendship.addHook('beforeCreate', (friendship: any) => {
 	friendship.last_update = new Date();
 });
 
+// 🆕 AJOUTER LES ASSOCIATIONS - C'EST ÇA QUI MANQUAIT !
+// Il faut ajouter cette fonction qui sera appelée après que tous les modèles soient initialisés
+export function setupFriendshipAssociations() {
+	const { User } = require('./user_model');
+	
+	// user_id1 -> 'sender' (celui qui reçoit la demande)
+	Friendship.belongsTo(User, {
+		foreignKey: 'user_id1',
+		as: 'sender'
+	});
+	
+	// user_id2 -> 'receiver' (celui qui envoie la demande)  
+	Friendship.belongsTo(User, {
+		foreignKey: 'user_id2',
+		as: 'receiver'
+	});
+}
+
 export { Friendship };

@@ -5,19 +5,39 @@ import { JWTpayload } from '../../interfaces';
 import { Op } from 'sequelize';
 
 export async function searchUsers(request: FastifyRequest<{ Querystring: { q: string } }>, reply: FastifyReply) {
+	console.log('🔍 === DEBUT SEARCH USERS ===');
+	console.log('🔍 Headers:', request.headers);
+	console.log('🔍 Query params:', request.query);
+	
 	try {
+		// Vérifier que l'utilisateur est authentifié
+		if (!request.user) {
+			console.log('❌ Pas d\'utilisateur authentifié');
+			return reply.code(401).send({ error: 'Non authentifié' });
+		}
+		
 		const payload = request.user as JWTpayload;
+		console.log('🔍 User ID du token:', payload.user_id);
+		
+		// Récupérer l'utilisateur actuel
 		const currentUser = await User.findByPk(payload.user_id);
 		if (!currentUser) {
-			return reply.code(404).send({ error: 'User not found'})
+			console.log('❌ Utilisateur courant non trouvé dans la DB');
+			return reply.code(404).send({ error: 'Utilisateur non trouvé' });
+		}
+		
+		console.log('✅ Utilisateur courant trouvé:', currentUser.username);
+
+		// Vérifier le paramètre de recherche
+		const query = request.query?.q;
+		if (!query || typeof query !== 'string' || query.trim().length < 1) {
+			console.log('❌ Query invalide:', query);
+			return reply.code(400).send({ error: 'Paramètre de recherche invalide' });
 		}
 
-		const query = request.query.q;
-		if (!query || query.trim().length < 2) {
-			return reply.code(400).send({ error: 'Query must be at least 2 characters long' });
-		}
+		console.log('🔍 Recherche pour le terme:', query.trim());
 
-		// Rechercher des utilisateurs par nom d'utilisateur (exclure l'utilisateur actuel)
+		// Recherche dans la base de données
 		const users = await User.findAll({
 			where: {
 				username: {
@@ -32,21 +52,42 @@ export async function searchUsers(request: FastifyRequest<{ Querystring: { q: st
 			order: [['username', 'ASC']]
 		});
 
-		const formattedUsers = users.map(user => ({
-			username: user.username,
-			number_of_matches: user.number_of_matches,
-			ratio: user.number_of_matches > 0 ? user.number_of_win / user.number_of_matches : 0,
-			avatar: user.avatar
-		}));
+		console.log('✅ Nombre d\'utilisateurs trouvés:', users.length);
+		console.log('✅ Utilisateurs:', users.map(u => ({ username: u.username, matches: u.number_of_matches })));
+
+		// Formater la réponse
+		const formattedUsers = users.map(user => {
+			const matches = user.number_of_matches || 0;
+			const wins = user.number_of_win || 0;
+			
+			return {
+				username: user.username,
+				number_of_matches: matches,
+				number_of_win: wins,
+				ratio: matches > 0 ? wins / matches : 0,
+				avatar: user.avatar || null
+			};
+		});
+
+		console.log('✅ Réponse formatée envoyée');
 
 		return reply.code(200).send({
-			query: query,
+			query: query.trim(),
 			count: formattedUsers.length,
 			users: formattedUsers
 		});
-	}
-	catch (error) {
-		console.error('Error searching users:', error);
-		return reply.code(500).send({ error: 'Internal server error'})
-	}
+
+	} catch (error) {
+	const err = error as Error;
+
+	console.error('❌ ERREUR DANS SEARCH USERS:');
+	console.error('❌ Message:', err.message);
+	console.error('❌ Stack:', err.stack);
+	console.error('❌ Error complète:', err);
+	
+	return reply.code(500).send({ 
+		error: 'Erreur interne du serveur',
+		details: err.message
+	});
+}
 }
